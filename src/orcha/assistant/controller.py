@@ -15,6 +15,7 @@ from orcha.assistant.contracts import (
     MoneyQuote,
     TextSource,
 )
+from orcha.assistant.routing import ActionRouter, RoutingSession
 from orcha.evaluation import validate_final_rows
 from orcha.evidence.gemma import GemmaUnavailable
 from orcha.evidence.provider import StructuredEvidenceProvider
@@ -104,11 +105,20 @@ def run_assistant(
     request: AssistantInput,
     repository: DatasetRepository,
     provider: StructuredEvidenceProvider,
+    router: ActionRouter | None = None,
 ) -> AssistantResult:
     """Use model facts only after grounding and domain checks; never edit imported data."""
     actions: list[str] = []
+    routing = RoutingSession(router, len(request.documents))
+
+    def clarify(
+        questions: list[str], actions: list[str], usage: ModelUsage | None
+    ) -> AssistantResult:
+        routing.choose("ask_clarification", issues=len(questions))
+        return _clarify(questions, actions, usage).model_copy(update={"routing": routing.decisions})
+
     if request.user_id not in repository.all_profiles:
-        return _clarify(["Import a financial profile for this user first."], actions, None)
+        return clarify(["Import a financial profile for this user first."], actions, None)
     profile = repository.get_profile(request.user_id)
     if (
         not re.fullmatch(r"[A-Z]{3}", profile.home_currency)
@@ -116,12 +126,12 @@ def run_assistant(
         or not profile.minimum_balance_to_keep.is_finite()
         or profile.minimum_balance_to_keep < 0
     ):
-        return _clarify(
+        return clarify(
             ["Import a valid profile currency, balance, and minimum balance."], actions, None
         )
     sources = [request.question, *request.documents]
     if any(_INSTRUCTIONS.search(source.text) for source in sources):
-        return _clarify(
+        return clarify(
             [
                 "A source contains instructions aimed at the assistant. Supply the financial facts "
                 "without those instructions."
@@ -133,7 +143,7 @@ def run_assistant(
         source.source_id for source in request.documents if _UNCERTAIN_BILL.search(source.text)
     ]
     if ambiguous:
-        return _clarify(
+        return clarify(
             [
                 f"Confirm whether {source_id} is an unpaid, confirmed bill and provide its current "
                 "amount and due date."
@@ -143,13 +153,13 @@ def run_assistant(
             None,
         )
     if len({source.text.strip() for source in request.documents}) != len(request.documents):
-        return _clarify(
+        return clarify(
             ["The same document was supplied twice. Confirm which bills are distinct."],
             actions,
             None,
         )
     if any(_multiple_amounts(source) for source in sources):
-        return _clarify(
+        return clarify(
             [
                 "A source contains multiple monetary amounts. Supply one confirmed purchase "
                 "price or payable bill total per source, or reconcile the conflicting amounts."
@@ -157,13 +167,15 @@ def run_assistant(
             actions,
             None,
         )
-    actions.append("interpret_request")
+    actions.append(routing.choose("interpret_request"))
     try:
         interpreted = provider.interpret(
             InterpretationContext(request=request, home_currency=profile.home_currency)
         )
     except GemmaUnavailable as error:
-        return AssistantResult(status="unavailable", brief=str(error), actions=actions)
+        return AssistantResult(
+            status="unavailable", brief=str(error), actions=actions, routing=routing.decisions
+        )
     extraction, usage = interpreted.extraction, interpreted.usage
     actions.append("validate_evidence")
     questions: list[str] = []
@@ -348,7 +360,7 @@ def run_assistant(
             ]
         )
     if questions:
-        return _clarify(questions, actions, usage)
+        return clarify(questions, actions, usage)
     assert money is not None and deadline is not None
     request_id = "assistant_" + hashlib.sha256(request.model_dump_json().encode()).hexdigest()[:20]
     financial_request = FinancialRequest(
@@ -381,13 +393,13 @@ def run_assistant(
         fx_resolver=repository.fx_resolver,
         dataset_dir=repository.dataset_dir,
     )
-    actions.append("run_forecast")
+    actions.append(routing.choose("run_forecast"))
     try:
         decision = DecisionEngine(isolated).evaluate_request(request_id)
         actions.append("verify_result")
         validate_final_rows([decision], isolated)
     except (ExchangeRateError, ValueError, KeyError, ArithmeticError):
-        return _clarify(
+        return clarify(
             [
                 "The imported financial evidence could not be fully verified. "
                 "Reconcile it before proceeding."
@@ -417,7 +429,7 @@ def run_assistant(
             ),
         ]
     )
-    actions.append("explain_result")
+    actions.append(routing.choose("explain_result"))
     # The model never writes financial conclusions: use only independently verified output.
     brief = (
         f"{decision.decision_explanation}\n"
@@ -432,4 +444,5 @@ def run_assistant(
         evidence=facts,
         actions=actions,
         usage=usage,
+        routing=routing.decisions,
     )
