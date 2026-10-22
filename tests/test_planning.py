@@ -345,10 +345,10 @@ def test_decision_engine_evaluation() -> None:
     if not dataset_dir.is_dir():
         pytest.skip("Dataset directory not present")
 
-    repo = DatasetRepository.load_from_dir(dataset_dir)
+    repo = DatasetRepository.load_from_dir(dataset_dir, include_samples=True)
     engine = DecisionEngine(repo)
 
-    result = engine.evaluate_request("request_01")
+    result = engine.evaluate_sample_request("request_01")
     assert result.request_id == "request_01"
     assert result.affordability_status == AffordabilityStatus.AFFORDABLE_NOW
     assert result.recommended_payment_method == RecommendedPaymentMethod.FULL_PAYMENT

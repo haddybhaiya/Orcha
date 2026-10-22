@@ -73,3 +73,19 @@ work. No evidence cache is required for these scenarios.
 The old `--audit-evidence` command compares dataset IDs with the original global
 caches. It is an original-dataset diagnostic and is not a suitable demo check.
 Use `--audit-data`, `--smoke`, and the output validation commands above.
+
+## Fresh text with hosted Gemma
+
+The static CSV checks above remain offline. To interpret a genuinely new update,
+use the separate assistant examples:
+
+```powershell
+python main.py --dataset demo/dataset --assist demo/assistant_request.json
+python main.py --dataset demo/dataset --assist demo/assistant_missing_amount.json
+python main.py --dataset demo/dataset --assist demo/assistant_amendment.json --brief-json
+```
+
+These explicit commands read `GEMMA_API_KEY` from the environment or `.env` and
+send the selected fictional texts to Google. The first case adds the bill to the
+`demo_before` profile in memory; the second asks for a missing amount; the third
+amends an existing bill once. See [assistant documentation](../docs/ASSISTANT.md).

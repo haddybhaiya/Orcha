@@ -130,6 +130,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="version",
         version=f"%(prog)s {__version__}",
     )
+    parser.add_argument(
+        "--assist",
+        type=Path,
+        metavar="INPUT_JSON",
+        help="Interpret a fresh question/text updates with hosted Gemma, "
+        "then verify a brief locally.",
+    )
+    parser.add_argument(
+        "--brief-json", action="store_true", help="Print the --assist result as structured JSON."
+    )
     return parser
 
 
@@ -691,6 +701,30 @@ def run_earliest_date_audit_command(dataset_dir: Path) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.brief_json and not args.assist:
+        parser.error("--brief-json requires --assist")
+    if args.assist:
+        other_actions = (
+            args.decision,
+            args.generate,
+            args.validate_output,
+            args.audit_safe_amounts,
+            args.audit_earliest_dates,
+            args.check_samples,
+            args.forecast,
+            args.check_baselines,
+            args.resolve_user,
+            args.audit_evidence,
+            args.audit_data,
+            args.smoke,
+            args.validate_only,
+        )
+        if any(other_actions):
+            parser.error("--assist cannot be combined with another action")
+        from orcha.assistant.cli import run_assistant_command
+
+        return run_assistant_command(args.assist, args.dataset, args.brief_json)
 
     config = AppConfig.from_env_or_args(
         dataset=args.dataset,
