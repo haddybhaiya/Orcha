@@ -12,6 +12,8 @@ Updated October 22, 2026. The active brief is [plan.md](../plan.md).
 - Fresh purchase questions, new unpaid text bills, and scheduled-bill amendments.
 - Source-grounded amounts/dates, clarification on incomplete/conflicting evidence,
   bounded provider retries, optional content-based local caching, and JSON briefs.
+- Authenticated CPU Laya inference on InstaCloud, compact workflow state, bounded
+  proposals, eligibility checks, confidence threshold, and a local fallback.
 
 The provider receives only the selected question and text updates, source IDs,
 reference date, and currency. Financial profiles/history stay local. Python
@@ -42,11 +44,12 @@ pass with the corrected sample-request lookup. New assistant tests cover complet
 workflows, source validation, conflicts, missing facts, ownership, unavailable FX,
 provider errors, retry bounds, caches, secrets, and CLI JSON output without API keys.
 
-Final result: **144 tests passed in 20.71 seconds**, including 37 new assistant
-checks. Lint and type checks passed; all eight changed/new Python files pass the
-format check. The wheel builds and includes the new workflow modules.
-Current test logs are under `.local/task2/`. The repository-wide format check flags an existing extra blank
-line in `tests/test_cli.py`; that file is unchanged by task 2.
+Task 2 result: **144 tests passed in 20.71 seconds**, including 37 assistant
+checks. Task 3 result: **169 tests passed in 19.64 seconds**, adding 25 routing
+and service-boundary checks. These checks use stubs and require no cloud access.
+Lint, type checks, and formatting of all changed/new Python files passed.
+The repository-wide format check flags an existing extra blank line in
+`tests/test_cli.py`; that file is unchanged by this work.
 
 Original dataset/cache files match their earlier verified hashes. Historical
 baseline results remain in [BASELINE.md](BASELINE.md); their missing-data status
@@ -54,9 +57,17 @@ is historical and no longer describes this checkout.
 
 ## Next work
 
-1. Add local Laya action selection with deterministic eligibility and fallback.
-2. Add a minimal upload/question/result interface with source and action visibility.
-3. Finish remaining focused checks, setup, demo recording, and submission draft.
+1. Add a minimal upload/question/result interface with source and action visibility.
+2. Finish remaining focused checks, setup, demo recording, and submission draft.
+
+Task 3's service is deployed to the isolated `laya-service` cloud branch. Its
+322M multilingual checkpoint loaded on CPU in 10.82 seconds. Four live stage
+probes all proposed `explain_result` at 0.46-0.52 confidence: the controller rejects
+them as ineligible or below the default 0.8 threshold. This demonstrates the
+fallback, not reliable model routing. See [LAYA_SERVICE.md](LAYA_SERVICE.md).
+The live combined Gemma/Laya demo completed in 12.79 seconds and retained the
+verified 18,000 INR safe-today result and October 25 full-payment date. All three
+routing points used the documented fallback.
 
 Image/PDF extraction, income-change interpretation, and an upload interface are
 not part of this first text workflow. Existing image facts remain cache-backed.

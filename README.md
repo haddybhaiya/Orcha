@@ -5,7 +5,8 @@ protects a minimum balance, and explains when and how a purchase can be paid for
 
 **Current status:** the financial engine works locally, and hosted Gemma can
 interpret fresh purchase questions and text bill updates through `--assist`.
-Local Laya routing and an upload interface are next in [plan.md](plan.md).
+Laya runs on InstaCloud with guarded routing and a local fallback. An upload
+interface is next in [plan.md](plan.md).
 
 ## How it works
 
@@ -17,7 +18,8 @@ Local Laya routing and an upload interface are next in [plan.md](plan.md).
 
 Python owns all financial calculations, plan verification, and the final brief.
 Gemma extracts typed facts and source quotes; Python validates them before ledger
-use. Planned Laya routing will select from a bounded set of workflow actions.
+use. Hosted Laya proposes bounded workflow actions; Python enforces eligibility
+and falls back when a proposal is invalid, uncertain, or unavailable.
 
 ## Run the offline demo
 
@@ -56,6 +58,11 @@ Google. Profiles, transaction history, calculations, and verification stay local
 The first text workflow supports unpaid one-off bills and scheduled-bill
 amendments. Missing/conflicting/unsupported facts produce clarification instead
 of a recommendation. See [assistant setup and limits](docs/ASSISTANT.md).
+
+The ignored `.env` can also configure `LAYA_API_URL` and `LAYA_API_TOKEN` for the
+InstaCloud service. The same commands then call Laya using workflow flags only,
+without loading its weights on your laptop. Routing proposals and fallback reasons
+appear in the output. See [Laya hosting and measured limits](docs/LAYA_SERVICE.md).
 
 ## Commands
 
@@ -107,6 +114,7 @@ The baseline report includes Windows temporary-directory workarounds.
 
 - [Current status](docs/CURRENT_STATE.md)
 - [Gemma assistant](docs/ASSISTANT.md)
+- [Hosted Laya routing](docs/LAYA_SERVICE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Data contract](docs/DATA_CONTRACT.md)
 - [Decision rules](docs/DECISION_RULES.md)

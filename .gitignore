@@ -17,3 +17,24 @@ dist/
 !.env.example
 dataset
 plan.md
+
+# Local agent credentials
+.insta/agent-session.json
+
+# Local: the control plane this machine linked against
+.insta/link-plane.json
+
+.insta/.agent-session-*.tmp
+
+# InstaCloud: local observe-hook state (regenerated per machine, not source)
+.insta/observe/
+.insta/audit.jsonl
+# Generated hooks that invoke the local observe installation
+.claude/settings.json
+.codex/hooks.json
+
+# InstaCloud: agent skills installed by `npx skills add` (regenerable, not source)
+.claude/skills/
+.agents/skills/
+.github/skills/
+skills-lock.json

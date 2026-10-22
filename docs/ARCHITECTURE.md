@@ -50,9 +50,19 @@ commands do not. Provider errors and unresolved facts produce no recommendation.
 The model does not calculate affordability or write financial conclusions.
 See [ASSISTANT.md](ASSISTANT.md) for current input limits and validation behavior.
 
-## Next: local Laya and interface
+## Hosted Laya routing
 
-Laya will select among a small eligible action set while Python enforces ordinary
-workflow dependencies and fallback behavior. An upload/question/result interface
-will expose the evidence and action trace. Neither is implemented yet; see
-[plan.md](../plan.md) for the build order.
+The local controller sends five workflow flags/counts to an authenticated Laya
+service on InstaCloud. No question, document text, identity, amount, or financial
+history goes to that service. Google still receives the selected text for Gemma.
+
+Laya proposes `interpret_request`, `ask_clarification`, `run_forecast`, or
+`explain_result`. Python accepts a proposal only when it matches the eligible
+stage and meets the confidence threshold. Validation and independent financial
+verification are mandatory Python operations. Every proposal/fallback is traced.
+The controller already determines eligibility, so this is advisory routing with
+limited model autonomy. Live checkpoint predictions are currently unreliable;
+the deterministic path preserves the working Gemma flow.
+
+See [LAYA_SERVICE.md](LAYA_SERVICE.md) for deployment and measured limits. The
+upload/question/result interface remains the next task.

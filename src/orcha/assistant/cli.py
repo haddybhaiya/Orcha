@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from orcha.assistant.contracts import AssistantInput
 from orcha.assistant.controller import run_assistant
+from orcha.assistant.routing import router_from_environment
 from orcha.evidence.gemma import GemmaConfig, GoogleGemmaProvider
 from orcha.repository import DatasetRepository
 
@@ -33,7 +34,9 @@ def run_assistant_command(input_path: Path, dataset: Path | None, as_json: bool)
         return 2
     if not as_json:
         print(f"[GEMMA] Sending the selected question and text updates to Google ({config.model}).")
-    result = run_assistant(request, repository, GoogleGemmaProvider(config))
+    result = run_assistant(
+        request, repository, GoogleGemmaProvider(config), router=router_from_environment()
+    )
     if as_json:
         print(result.model_dump_json(indent=2))
     else:
@@ -45,6 +48,8 @@ def run_assistant_command(input_path: Path, dataset: Path | None, as_json: bool)
             for fact in result.evidence:
                 print(f"  [{fact.source_id}] {fact.field}: {fact.value}")
         print("Actions: " + " -> ".join(result.actions))
+        for decision in result.routing:
+            print(f"Routing: {decision.selected_action} via {decision.source} ({decision.reason})")
         if result.usage:
             print("Model usage: " + json.dumps(result.usage.model_dump()))
     return {"complete": 0, "needs_clarification": 2, "unavailable": 3}[result.status]

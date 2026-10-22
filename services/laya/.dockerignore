@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!requirements.txt
+!prepare_model.py
+!service.py
+!NOTICE.md

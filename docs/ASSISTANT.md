@@ -2,7 +2,8 @@
 
 Task 2 adds a Google AI Studio adapter and a Python controller around the existing
 financial engine. It interprets fresh text rather than looking up saved demo facts.
-Laya routing and an upload UI are separate later tasks.
+Task 3 adds optional hosted Laya proposals and guarded local fallback; see
+[Laya service](LAYA_SERVICE.md). An upload UI remains a later task.
 
 ## Run
 
@@ -74,7 +75,9 @@ updates and asks for clarification rather than resolving complex documents.
 
 Normal output shows the brief, source facts, controller actions, and model usage.
 `--brief-json` emits an `AssistantResult` with status, questions, decision, evidence,
-actions, and usage. No Laya decisions are claimed; these actions are deterministic.
+actions, usage, and a `routing` trace. That trace distinguishes accepted Laya
+proposals from deterministic fallbacks. Validation and financial verification
+remain mandatory Python actions.
 
 Exit codes: `0` complete, `2` clarification/input/configuration needed, `3` provider
 unavailable. Rate limits and transient server errors have at most one retry.

@@ -6,6 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from orcha.assistant.routing import RoutingDecision
 from orcha.models import OutputRow
 
 SourceId = Annotated[str, Field(pattern=r"^[a-zA-Z][a-zA-Z0-9_-]{0,63}$")]
@@ -122,3 +123,4 @@ class AssistantResult(Contract):
     evidence: list[EvidenceFact] = Field(default_factory=list)
     actions: list[str] = Field(default_factory=list)
     usage: ModelUsage | None = None
+    routing: list[RoutingDecision] = Field(default_factory=list)
