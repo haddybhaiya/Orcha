@@ -1,49 +1,62 @@
 # Orcha: current status
 
-The current implementation brief is [plan.md](../plan.md). This page describes
-this checkout; historical design notes and original-data evaluation reports are
-not evidence of completed assistant features.
+Updated October 22, 2026. The active brief is [plan.md](../plan.md).
 
-## Working locally
+## Working
 
-- Typed CSV inputs, exact Decimal money, and dated FX normalization.
-- Ledger lifecycle resolution and evidence-based recurring cash flow.
-- A 90-day forecast with minimum-balance protection.
-- Payment-plan generation, verification, ranking, and explanations.
-- Independent replay and serialized-output validation.
-- A self-contained synthetic demo before and after a new bill.
+- Local CSV financial imports, typed Decimal money, and dated FX normalization.
+- Canonical ledger resolution, recurrence, 90-day simulation, payment planning,
+  deterministic explanations, and independent result verification.
+- Synthetic offline demo data and expected financial decisions.
+- Google AI Studio Gemma interpretation through the explicit `--assist` command.
+- Fresh purchase questions, new unpaid text bills, and scheduled-bill amendments.
+- Source-grounded amounts/dates, clarification on incomplete/conflicting evidence,
+  bounded provider retries, optional content-based local caching, and JSON briefs.
 
-The product, distribution, CLI, and import namespace now use **Orcha** / `orcha`.
-The package is `src/orcha/`; run `python main.py`, `python -m orcha.cli` after
-installation, or the installed `orcha` command.
+The provider receives only the selected question and text updates, source IDs,
+reference date, and currency. Financial profiles/history stay local. Python
+validates all extracted facts and independently verifies recommendations. The
+brief uses engine output, not model-generated financial conclusions.
 
-## Verified baseline
+See [ASSISTANT.md](ASSISTANT.md) for commands, data flow, supported inputs, and limits.
+The product, distribution, CLI, and import namespace are **Orcha** / `orcha`.
 
-See [BASELINE.md](BASELINE.md) for the environment and actual check results.
-The existing suite passed 89 checks, with 17 failures and one skip tied to missing
-original data or images. Lint, formatting, and static type checks passed.
-The demo passes smoke, data audit, generation, and independent output validation.
+## Verified live examples
 
-The naming cleanup was checked separately: the same 89 tests pass, the same 17
-original-data tests fail, and one skips. Lint, formatting, and type checks pass.
-A local `orcha-0.1.0` wheel builds without downloading dependencies; its console
-entry point is `orcha = orcha.cli:main`, and the packaged CLI reports
-`orcha 0.1.0`. Demo output, including explanations, matches the pre-rename output
-exactly. All 11 recorded data/cache/expected-result file hashes are unchanged.
-Local check logs are under `.local/rename/` and excluded from source control.
+All live requests used fictional demo text with `gemma-4-26b-a4b-it`.
 
-| Synthetic scenario | Safe amount today | Recommendation |
-| --- | ---: | --- |
-| Before repair bill | INR 25,000 | Full payment on October 21, 2026 |
-| After INR 12,000 bill | INR 18,000 | Wait; full payment on October 25, 2026 |
+| Scenario | Result |
+| --- | --- |
+| Fresh 12,000 INR repair bill | Safe today 18,000; pay the 25,000 laptop price on October 25. |
+| Missing repair amount | Clarification; no forecast or financial recommendation. |
+| Existing repair bill amended to 15,000 | Safe today 15,000; pay the laptop price on October 25. |
+
+Early provider probes saw a transient internal error and a timeout. The working
+configuration uses minimal thinking and a bounded output budget. Successful-run
+latency and actual token usage are recorded in [ASSISTANT.md](ASSISTANT.md).
+
+## Offline verification
+
+The root dataset and all 16 receipt images are restored. All original 107 tests
+pass with the corrected sample-request lookup. New assistant tests cover complete
+workflows, source validation, conflicts, missing facts, ownership, unavailable FX,
+provider errors, retry bounds, caches, secrets, and CLI JSON output without API keys.
+
+Final result: **144 tests passed in 20.71 seconds**, including 37 new assistant
+checks. Lint and type checks passed; all eight changed/new Python files pass the
+format check. The wheel builds and includes the new workflow modules.
+Current test logs are under `.local/task2/`. The repository-wide format check flags an existing extra blank
+line in `tests/test_cli.py`; that file is unchanged by task 2.
+
+Original dataset/cache files match their earlier verified hashes. Historical
+baseline results remain in [BASELINE.md](BASELINE.md); their missing-data status
+is historical and no longer describes this checkout.
 
 ## Next work
 
-1. Complete one Gemma workflow: fresh question/update, validated facts and source
-   references, deterministic engine result, and grounded explanation.
-2. Add local Laya action selection with a deterministic fallback.
-3. Add a minimal upload/question/result interface and action visibility.
-4. Finish focused checks, setup, demo recording, and a local submission draft.
+1. Add local Laya action selection with deterministic eligibility and fallback.
+2. Add a minimal upload/question/result interface with source and action visibility.
+3. Finish remaining focused checks, setup, demo recording, and submission draft.
 
-No live model adapter, model routing, or upload interface is implemented yet.
-The original dataset and receipt assets are not present in this checkout.
+Image/PDF extraction, income-change interpretation, and an upload interface are
+not part of this first text workflow. Existing image facts remain cache-backed.

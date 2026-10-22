@@ -1,11 +1,20 @@
 """Evidence provider abstraction and interfaces."""
 
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from orcha.evidence.images import ImageEvidenceExtractor
 from orcha.evidence.messages import MessageEvidenceExtractor
 from orcha.evidence.models import ImageEvidence, MessageEvidence
+
+if TYPE_CHECKING:
+    from orcha.assistant.contracts import ExtractionResponse, InterpretationContext
+
+
+class StructuredEvidenceProvider(Protocol):
+    """Interpret new questions/documents without granting financial authority."""
+
+    def interpret(self, context: "InterpretationContext") -> "ExtractionResponse": ...
 
 
 class EvidenceProvider(Protocol):

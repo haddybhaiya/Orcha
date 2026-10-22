@@ -4,8 +4,8 @@ The full implementation brief and constraints are in [plan.md](../plan.md).
 
 | Task | Deliverable | Status |
 | --- | --- | --- |
-| 1. Baseline | Inspect the engine, run offline checks, record gaps, add synthetic demo data. | Complete; original-data checks remain unavailable. |
-| 2. Gemma workflow | Interpret fresh inputs, validate facts and source references, call the engine, explain verified results. | Next. |
+| 1. Baseline | Inspect the engine, run offline checks, record gaps, add synthetic demo data. | Complete; original dataset restored and its checks pass. |
+| 2. Gemma workflow | Interpret fresh inputs, validate facts and source references, call the engine, explain verified results. | Complete for fresh text bills and scheduled-bill amendments; see ASSISTANT.md. |
 | 3. Local Laya routing | Bounded action selection, enforced dependencies, and a reliable fallback. | Planned. |
 | 4. Demonstration interface | Upload/question/result flow with recommendations, evidence, and action visibility. | Planned. |
 | 5. Optional integrations | Sentry tracing first; voice or hosting only if useful and time allows. | Planned. |

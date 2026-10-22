@@ -22,15 +22,15 @@ caches, API keys, or paid calls. Its expected decision fields are recorded in
 `demo/expected_results.json`. See [BASELINE.md](BASELINE.md) for measured check
 results, missing original resources, and reproducible commands.
 
-The existing tests remain in place. Original-data integrations require the absent
+The existing tests remain in place. Original-data integrations now use the restored
 input CSVs and images. Reports under `evaluation/` are historical diagnostics;
 their sample scores and 250-row run are not results from this checkout.
 
-## Assistant workflow checks to add
+## Assistant workflow checks
 
-When the Gemma controller is implemented, use focused mocked-provider and boundary
-checks for typed extraction, missing/conflicting facts, untrusted input, provider
-errors, and the complete workflow. CI must not require credentials or paid calls.
+The Gemma controller has focused mocked-provider and boundary checks for typed
+extraction, missing/conflicting facts, untrusted input, provider errors, and the
+complete workflow. CI does not require credentials or paid calls.
 Track correctness of demonstrated cases, model calls, latency, and cost where useful.
 
 ## Delivery evidence
