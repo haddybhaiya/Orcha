@@ -1,0 +1,297 @@
+{
+  "date": "2026-10-23",
+  "scope": "Synthetic controller workflow flags only; not financial decision accuracy.",
+  "checkpoints": {
+    "multilingual": {
+      "original_json": {
+        "correct": 2,
+        "total": 8,
+        "mean_ms": 199.83
+      },
+      "english": {
+        "correct": 2,
+        "total": 8,
+        "mean_ms": 182.72
+      },
+      "neutral": {
+        "correct": 4,
+        "total": 8,
+        "mean_ms": 174.95
+      },
+      "rotations": {
+        "correct": 4,
+        "total": 8,
+        "mean_ms": 544.55
+      }
+    },
+    "english": {
+      "original_json": {
+        "correct": 2,
+        "total": 8,
+        "mean_ms": 478.17
+      },
+      "english": {
+        "correct": 4,
+        "total": 8,
+        "mean_ms": 451.3
+      },
+      "neutral": {
+        "correct": 3,
+        "total": 8,
+        "mean_ms": 421.35
+      },
+      "rotations": {
+        "correct": 2,
+        "total": 8,
+        "mean_ms": 1566.02
+      }
+    },
+    "typed": {
+      "original_json": {
+        "correct": 3,
+        "total": 8,
+        "mean_ms": 445.94
+      },
+      "english": {
+        "correct": 4,
+        "total": 8,
+        "mean_ms": 448.41
+      },
+      "neutral": {
+        "correct": 4,
+        "total": 8,
+        "mean_ms": 415.99
+      },
+      "rotations": {
+        "correct": 4,
+        "total": 8,
+        "mean_ms": 1481.01
+      }
+    }
+  },
+  "normalization": "Drop document_count; map positive issues_count to 1. Preserve three progress flags; inject no action label.",
+  "adaptation": {
+    "base_model": "convaiinnovations/laya-multilingual",
+    "base_revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+    "parameters": 768,
+    "optimizer": "LBFGS",
+    "max_iterations": 500,
+    "seed": 23,
+    "adapter_sha256": "5a19737961a8d1be868010a86dea9a1c574e140a1304a241b5b2d63b195120ab",
+    "artifact_bytes": 3152,
+    "splits": {
+      "train": {
+        "total": 18,
+        "baseline_correct": 3,
+        "adapted_correct": 18,
+        "minimum_confidence": 1.0
+      },
+      "validation": {
+        "total": 10,
+        "baseline_correct": 2,
+        "adapted_correct": 10,
+        "minimum_confidence": 1.0
+      },
+      "test": {
+        "total": 24,
+        "baseline_correct": 4,
+        "adapted_correct": 24,
+        "minimum_confidence": 1.0
+      }
+    }
+  },
+  "limitations": [
+    "Only four normalized controller states are supported.",
+    "Validation/test count variations normalize to states represented in training; this is not unseen semantic generalization.",
+    "Scores round to 1.0 on these states; they are not calibrated real-world correctness probabilities.",
+    "Python eligibility and the existing 0.8 score gate remain mandatory."
+  ],
+  "candidate_live": [
+    {
+      "eligible_action": "interpret_request",
+      "selected_action": "interpret_request",
+      "proposed_action": "interpret_request",
+      "source": "laya",
+      "reason": "accepted",
+      "confidence": 1.0,
+      "latency_ms": 2292.99,
+      "model": "convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "policy_version": "orcha-workflow-v1"
+    },
+    {
+      "eligible_action": "ask_clarification",
+      "selected_action": "ask_clarification",
+      "proposed_action": "ask_clarification",
+      "source": "laya",
+      "reason": "accepted",
+      "confidence": 1.0,
+      "latency_ms": 1345.16,
+      "model": "convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "policy_version": "orcha-workflow-v1"
+    },
+    {
+      "eligible_action": "run_forecast",
+      "selected_action": "run_forecast",
+      "proposed_action": "run_forecast",
+      "source": "laya",
+      "reason": "accepted",
+      "confidence": 1.0,
+      "latency_ms": 1204.45,
+      "model": "convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "policy_version": "orcha-workflow-v1"
+    },
+    {
+      "eligible_action": "explain_result",
+      "selected_action": "explain_result",
+      "proposed_action": "explain_result",
+      "source": "laya",
+      "reason": "accepted",
+      "confidence": 1.0,
+      "latency_ms": 1111.36,
+      "model": "convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "policy_version": "orcha-workflow-v1"
+    }
+  ],
+  "equivalence_check": {
+    "raw_controller_states": 927,
+    "unique_model_inputs": 4,
+    "method": "Exhaustive offline normalization check plus authenticated live inference on all four equivalence classes."
+  },
+  "cold_start": {
+    "seconds": 28.53,
+    "ready_checks": 12,
+    "loading_responses": 12,
+    "decision": {
+      "eligible_action": "interpret_request",
+      "selected_action": "interpret_request",
+      "proposed_action": "interpret_request",
+      "source": "laya",
+      "reason": "accepted",
+      "confidence": 1.0,
+      "latency_ms": 28529.89,
+      "model": "convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "policy_version": "orcha-workflow-v1"
+    }
+  },
+  "production_live": {
+    "readiness": {
+      "status": "ready",
+      "model": "convaiinnovations/laya-multilingual",
+      "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+      "versions": {
+        "laya": "0.4.13",
+        "torch": "2.9.1+cpu",
+        "transformers": "4.57.6"
+      },
+      "device": "cpu",
+      "startup_ms": 11084.94,
+      "policy_version": "orcha-workflow-v1",
+      "adapter_sha256": "5a19737961a8d1be868010a86dea9a1c574e140a1304a241b5b2d63b195120ab"
+    },
+    "routing": [
+      {
+        "eligible_action": "interpret_request",
+        "selected_action": "interpret_request",
+        "proposed_action": "interpret_request",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 1395.66,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      },
+      {
+        "eligible_action": "ask_clarification",
+        "selected_action": "ask_clarification",
+        "proposed_action": "ask_clarification",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 1299.38,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      },
+      {
+        "eligible_action": "run_forecast",
+        "selected_action": "run_forecast",
+        "proposed_action": "run_forecast",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 1533.13,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      },
+      {
+        "eligible_action": "explain_result",
+        "selected_action": "explain_result",
+        "proposed_action": "explain_result",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 672.61,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      }
+    ],
+    "seconds": 6.22
+  },
+  "production_workflow": {
+    "status": "complete",
+    "safe_amount": "18000.00",
+    "payment_date": "2026-10-25",
+    "routing": [
+      {
+        "eligible_action": "interpret_request",
+        "selected_action": "interpret_request",
+        "proposed_action": "interpret_request",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 1360.4,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      },
+      {
+        "eligible_action": "run_forecast",
+        "selected_action": "run_forecast",
+        "proposed_action": "run_forecast",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 1523.03,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      },
+      {
+        "eligible_action": "explain_result",
+        "selected_action": "explain_result",
+        "proposed_action": "explain_result",
+        "source": "laya",
+        "reason": "accepted",
+        "confidence": 1.0,
+        "latency_ms": 1220.53,
+        "model": "convaiinnovations/laya-multilingual",
+        "revision": "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67",
+        "policy_version": "orcha-workflow-v1"
+      }
+    ],
+    "seconds": 12.86
+  },
+  "deployment": {
+    "branch": "laya-service",
+    "image_digest": "sha256:987e77b5957f91b2466be1360410e3aa86d6f9d4e8052d2f6067906034d3d680",
+    "status": "deployed and verified"
+  }
+}
