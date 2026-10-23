@@ -4,3 +4,5 @@
 !prepare_model.py
 !service.py
 !NOTICE.md
+!policy.py
+!workflow-scorer.safetensors

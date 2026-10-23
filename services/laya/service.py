@@ -9,21 +9,31 @@ import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any
+
+try:
+    from .policy import (
+        ADAPTER_SHA256,
+        CRITERIA,
+        INSTRUCTIONS,
+        POLICY_VERSION,
+        apply_adapter,
+        model_state,
+    )
+except ImportError:  # Direct container entry point.
+    from policy import (  # type: ignore[import-not-found, no-redef]
+        ADAPTER_SHA256,
+        CRITERIA,
+        INSTRUCTIONS,
+        POLICY_VERSION,
+        apply_adapter,
+        model_state,
+    )
 
 MODEL = "convaiinnovations/laya-multilingual"
 REVISION = "e4e9ddf21a7b1903b7acffd8814ad4307bf63a67"
 FIELDS = {"interpreted", "evidence_valid", "result_verified", "issues_count", "document_count"}
-CRITERIA = {
-    "interpret_request": "No interpretation yet and no blocking issues: interpret the request.",
-    "ask_clarification": "There are blocking issues or unresolved facts: ask for clarification.",
-    "run_forecast": (
-        "Interpretation and evidence validation are complete, no issues, result not verified."
-    ),
-    "explain_result": (
-        "The financial result is already independently verified and there are no issues."
-    ),
-}
 
 
 def validate_payload(payload: object) -> dict[str, Any]:
@@ -42,6 +52,11 @@ def validate_payload(payload: object) -> dict[str, Any]:
         raise ValueError("Result verification needs valid evidence")
     if state["evidence_valid"] and not state["interpreted"]:
         raise ValueError("Evidence validation needs interpretation")
+    progress = (state["interpreted"], state["evidence_valid"], state["result_verified"])
+    if progress not in {(False, False, False), (True, True, False), (True, True, True)}:
+        raise ValueError("Unsupported workflow phase")
+    if state["issues_count"] and any(progress):
+        raise ValueError("Clarification uses a blocked workflow state")
     return state
 
 
@@ -59,9 +74,9 @@ class ModelRuntime:
 
             laya = importlib.import_module("laya")
             torch.set_num_threads(4)
-            self.agent = laya.load(
-                os.environ.get("LAYA_MODEL_DIR", "/opt/laya-model"), device="cpu"
-            )
+            agent = laya.load(os.environ.get("LAYA_MODEL_DIR", "/opt/laya-model"), device="cpu")
+            apply_adapter(agent, Path(__file__).with_name("workflow-scorer.safetensors"))
+            self.agent = agent
             self.startup_ms = round((time.perf_counter() - started) * 1000, 2)
             print(json.dumps({"event": "model_ready", **self.metadata()}), flush=True)
         except Exception as error:
@@ -84,6 +99,8 @@ class ModelRuntime:
             "versions": versions,
             "device": "cpu",
             "startup_ms": self.startup_ms,
+            "policy_version": POLICY_VERSION,
+            "adapter_sha256": ADAPTER_SHA256,
         }
 
     def predict(self, state: dict[str, Any]) -> dict[str, Any]:
@@ -95,15 +112,11 @@ class ModelRuntime:
         started = time.perf_counter()
         try:
             result = self.agent.predict(
-                json.dumps(state, sort_keys=True),
+                model_state(state),
                 {
                     "next_action": {
                         "type": "choice",
-                        "instructions": (
-                            "Choose the next financial-assistant workflow action from the flags. "
-                            "Any issues_count above zero requires clarification. "
-                            "Never skip validation."
-                        ),
+                        "instructions": INSTRUCTIONS,
                         "criteria": CRITERIA,
                     }
                 },
@@ -127,6 +140,7 @@ class ModelRuntime:
                 "model": MODEL,
                 "revision": REVISION,
                 "inference_ms": round((time.perf_counter() - started) * 1000, 2),
+                "policy_version": POLICY_VERSION,
             }
         finally:
             self.lock.release()
