@@ -124,3 +124,14 @@ class AssistantResult(Contract):
     actions: list[str] = Field(default_factory=list)
     usage: ModelUsage | None = None
     routing: list[RoutingDecision] = Field(default_factory=list)
+    timeline: list["ForecastPoint"] = Field(default_factory=list)
+
+
+class ForecastPoint(Contract):
+    date: date
+    balance: Decimal
+    income: Decimal
+    expenses: Decimal
+
+
+AssistantResult.model_rebuild()
