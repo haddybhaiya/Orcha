@@ -5,8 +5,22 @@ protects a minimum balance, and explains when and how a purchase can be paid for
 
 **Current status:** the financial engine works locally, and hosted Gemma can
 interpret fresh purchase questions and text bill updates through `--assist`.
-Laya runs on InstaCloud with guarded routing and a local fallback. An upload
-interface is next in [plan.md](plan.md).
+Laya runs on InstaCloud with guarded routing and a local fallback. A local web
+workspace now supports CSV imports, text updates, and verified purchase plans.
+
+## Open the web workspace
+
+From this repository root:
+
+```powershell
+python -m pip install -e ".[web]"
+python web.py
+```
+
+Open **http://127.0.0.1:8000**. Try **A laptop & a new bill**, then **Find a steady
+way forward**. The configured `.env` supplies Gemma and optional hosted Laya.
+The overview works without API keys; fresh text interpretation needs Gemma.
+See [the interface guide](docs/WEB_INTERFACE.md) for imports, privacy, and limits.
 
 ## How it works
 
