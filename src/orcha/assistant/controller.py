@@ -10,6 +10,7 @@ from orcha.assistant.contracts import (
     AssistantResult,
     DateQuote,
     EvidenceFact,
+    ForecastPoint,
     InterpretationContext,
     ModelUsage,
     MoneyQuote,
@@ -33,6 +34,8 @@ from orcha.models import (
 from orcha.money import ExchangeRateError, quantize_money
 from orcha.planning.engine import DecisionEngine
 from orcha.repository import DatasetRepository
+from orcha.simulation.forecast import simulate
+from orcha.simulation.timeline import get_forecast_window
 
 _INSTRUCTIONS = re.compile(
     r"ignore\s+(?:all\s+)?(?:previous\s+)?instructions?|system\s*prompt|"
@@ -106,6 +109,8 @@ def run_assistant(
     repository: DatasetRepository,
     provider: StructuredEvidenceProvider,
     router: ActionRouter | None = None,
+    *,
+    include_timeline: bool = False,
 ) -> AssistantResult:
     """Use model facts only after grounding and domain checks; never edit imported data."""
     actions: list[str] = []
@@ -395,9 +400,26 @@ def run_assistant(
     )
     actions.append(routing.choose("run_forecast"))
     try:
-        decision = DecisionEngine(isolated).evaluate_request(request_id)
+        engine = DecisionEngine(isolated)
+        decision = engine.evaluate_request(request_id)
         actions.append("verify_result")
         validate_final_rows([decision], isolated)
+        timeline: list[ForecastPoint] = []
+        if include_timeline:
+            start, end = get_forecast_window(request.as_of)
+            ledger = engine.baseline_engine.get_or_resolve_ledger(
+                request.user_id, request.as_of, request_id
+            )
+            forecast = simulate(profile, ledger, start, end)
+            timeline = [
+                ForecastPoint(
+                    date=point.record_date,
+                    balance=point.closing_balance,
+                    income=point.cash_inflows,
+                    expenses=point.cash_outflows,
+                )
+                for point in forecast.daily_records
+            ]
     except (ExchangeRateError, ValueError, KeyError, ArithmeticError):
         return clarify(
             [
@@ -445,4 +467,5 @@ def run_assistant(
         actions=actions,
         usage=usage,
         routing=routing.decisions,
+        timeline=timeline,
     )

@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd --create-home app && mkdir -p /opt/hf /opt/laya-model \
     && chown app:app /opt/hf /opt/laya-model /app
 COPY --chown=app:app prepare_model.py service.py ./
+COPY --chown=app:app policy.py workflow-scorer.safetensors ./
 COPY --chown=app:app NOTICE.md ./
 USER app
 RUN python prepare_model.py

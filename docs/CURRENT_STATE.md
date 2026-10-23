@@ -1,9 +1,14 @@
 # Orcha: current status
 
-Updated October 22, 2026. The active brief is [plan.md](../plan.md).
+Updated October 23, 2026. The active brief is [plan.md](../plan.md).
 
 ## Working
 
+- Deployed Laya workflow v1: normalized input and a 768-weight scorer adaptation.
+  All four production routing stages pass. Three candidate Gemma scenarios pass;
+  see [LAYA_REFINEMENT.md](LAYA_REFINEMENT.md) for scope and verification.
+- Local web workspace with CSV imports, text updates, cash-flow chart, verified
+  recommendations, source evidence, and model/fallback traces. See [WEB_INTERFACE.md](WEB_INTERFACE.md).
 - Local CSV financial imports, typed Decimal money, and dated FX normalization.
 - Canonical ledger resolution, recurrence, 90-day simulation, payment planning,
   deterministic explanations, and independent result verification.
@@ -57,8 +62,8 @@ is historical and no longer describes this checkout.
 
 ## Next work
 
-1. Add a minimal upload/question/result interface with source and action visibility.
-2. Finish remaining focused checks, setup, demo recording, and submission draft.
+1. Decide whether optional Task 5 integrations add value to the demonstration.
+2. Complete Task 6: demo recording and submission draft, with final delivery checks.
 
 Task 3's service is deployed to the isolated `laya-service` cloud branch. Its
 322M multilingual checkpoint loaded on CPU in 10.82 seconds. Four live stage
@@ -69,5 +74,10 @@ The live combined Gemma/Laya demo completed in 12.79 seconds and retained the
 verified 18,000 INR safe-today result and October 25 full-payment date. All three
 routing points used the documented fallback.
 
-Image/PDF extraction, income-change interpretation, and an upload interface are
-not part of this first text workflow. Existing image facts remain cache-backed.
+Task 4's 15 API checks bring the suite to 184 passing tests. Desktop and mobile
+browser checks and live examples are documented in WEB_INTERFACE.md, including
+the browser extension's automated-file-selection limitation.
+
+Fresh image/PDF extraction and income-change interpretation remain unsupported.
+The interface accepts CSV bundles and text updates. Existing image facts remain
+cache-backed.

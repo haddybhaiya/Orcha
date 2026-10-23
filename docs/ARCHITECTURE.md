@@ -18,6 +18,7 @@ Financial CSV inputs
 | Module | Responsibility |
 | --- | --- |
 | `orcha.cli` / `orcha.config` | Commands, input/output paths, and runtime settings. |
+| `orcha.web` | Loopback HTTP API, ephemeral CSV workspace and interpretation cache, static interface. |
 | `orcha.models` / `orcha.loaders` | Typed financial records, dates, and CSV parsing. |
 | `orcha.repository` / `orcha.money` | Entity indexes, Decimal amounts, and dated FX conversion. |
 | `orcha.evidence` | Hosted Gemma structured text extraction, saved image facts, and local message parsing. |

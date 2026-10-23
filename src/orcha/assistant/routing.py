@@ -4,6 +4,7 @@ import json
 import math
 import os
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
@@ -33,6 +34,7 @@ class Proposal(BaseModel):
     model: str = Field(min_length=1, max_length=128)
     revision: str = Field(pattern=r"^[a-f0-9]{40}$")
     inference_ms: float = Field(ge=0)
+    policy_version: str | None = Field(default=None, min_length=1, max_length=100)
 
     @field_validator("confidence", "inference_ms", mode="before")
     @classmethod
@@ -55,6 +57,7 @@ class RoutingDecision(BaseModel):
     latency_ms: float = 0
     model: str | None = None
     revision: str | None = None
+    policy_version: str | None = None
 
 
 class ActionRouter(Protocol):
@@ -71,6 +74,7 @@ class RemoteLayaRouter:
     url: str
     token: str = field(repr=False)
     timeout_seconds: float = 8
+    startup_timeout_seconds: float = 45
 
     def __post_init__(self) -> None:
         parsed = urlsplit(self.url)
@@ -84,10 +88,15 @@ class RemoteLayaRouter:
             or parsed.path.rstrip("/")
         ):
             raise ValueError("LAYA_API_URL must be an HTTPS origin without credentials or a path")
-        if len(self.token) < 16 or not 1 <= self.timeout_seconds <= 60:
+        if (
+            len(self.token) < 16
+            or not 1 <= self.timeout_seconds <= 60
+            or not 1 <= self.startup_timeout_seconds <= 60
+        ):
             raise ValueError("Invalid Laya token or timeout")
 
     def propose(self, state: RoutingState) -> object:
+        deadline = time.monotonic() + self.startup_timeout_seconds
         body = json.dumps({"schema_version": "1", "state": state.model_dump()}).encode()
         request = urllib.request.Request(
             self.url.rstrip("/") + "/v1/route",
@@ -95,13 +104,44 @@ class RemoteLayaRouter:
             method="POST",
             headers={"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"},
         )
-        with urllib.request.build_opener(_NoRedirect()).open(
-            request, timeout=self.timeout_seconds
-        ) as response:
-            raw = response.read(16_385)
-        if len(raw) > 16_384:
-            raise ValueError("Oversized routing response")
-        return json.loads(raw)
+        opener = urllib.request.build_opener(_NoRedirect())
+
+        def read_json(response: Any) -> Any:
+            with response:
+                raw = response.read(16_385)
+            if len(raw) > 16_384:
+                raise ValueError("Oversized routing response")
+            return json.loads(raw)
+
+        def remaining() -> float:
+            seconds = deadline - time.monotonic()
+            if seconds <= 0:
+                raise TimeoutError("Laya startup deadline expired")
+            return min(self.timeout_seconds, seconds)
+
+        try:
+            return read_json(opener.open(request, timeout=remaining()))
+        except urllib.error.HTTPError as error:
+            if error.code != 503:
+                raise
+            # A reachable process can still be loading its checkpoint after waking.
+            # Only this explicit service response permits readiness polling.
+            if read_json(error) != {"error": "model_unavailable"}:
+                raise ValueError("Unexpected Laya availability response") from None
+        readiness = urllib.request.Request(self.url.rstrip("/") + "/ready")
+        while True:
+            try:
+                response = opener.open(readiness, timeout=remaining())
+            except urllib.error.HTTPError as error:
+                if error.code != 503:
+                    raise
+                response = error
+            status = read_json(response).get("status")
+            if status == "ready":
+                return read_json(opener.open(request, timeout=remaining()))
+            if status != "loading":
+                raise ValueError("Laya model initialization failed")
+            time.sleep(min(1, remaining()))
 
 
 def router_from_environment() -> ActionRouter | None:
@@ -110,7 +150,12 @@ def router_from_environment() -> ActionRouter | None:
     if not url or not token:
         return None
     try:
-        return RemoteLayaRouter(url, token, float(os.getenv("LAYA_TIMEOUT_SECONDS", "8")))
+        return RemoteLayaRouter(
+            url,
+            token,
+            float(os.getenv("LAYA_TIMEOUT_SECONDS", "8")),
+            float(os.getenv("LAYA_STARTUP_TIMEOUT_SECONDS", "45")),
+        )
     except ValueError:
         return None
 
@@ -170,6 +215,7 @@ class RoutingSession:
                 latency_ms=round((time.perf_counter() - started) * 1000, 2),
                 model=proposal.model if proposal else None,
                 revision=proposal.revision if proposal else None,
+                policy_version=proposal.policy_version if proposal else None,
             )
         )
         return eligible

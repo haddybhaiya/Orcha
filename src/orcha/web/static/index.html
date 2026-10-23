@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#163e32" />
+    <title>Orcha — Room for what matters</title>
+    <meta
+      name="description"
+      content="A thoughtful financial workspace. See your cash flow, protect your balance, and plan your next purchase."
+    />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#planner">Skip to planner</a>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="Orcha home"
+          ><span class="brand-mark">o<span>·</span></span
+          >orcha</a
+        >
+        <div class="sidebar-caption">
+          A little clarity.<br />A steadier tomorrow.
+        </div>
+        <nav aria-label="Workspace">
+          <a class="nav-active" href="#overview"><span>◈</span> Overview</a
+          ><a href="#planner"><span>↗</span> Purchase planner</a
+          ><a href="#ledger"><span>≡</span> Upcoming activity</a>
+        </nav>
+        <div class="sidebar-bottom">
+          <span class="local-dot"></span> Calculated on your device
+          <p>Financial clarity, one thoughtful<br />decision at a time.</p>
+          <a href="/api/template">Download sample CSVs ↗</a>
+        </div>
+      </aside>
+      <main id="overview">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">YOUR FINANCIAL WORKSPACE</span
+            ><span id="data-badge" class="badge">Loading workspace</span>
+          </div>
+          <div class="header-actions">
+            <button class="text-button" id="reset">Use demo</button
+            ><button class="button secondary" id="import-open">
+              Import finances <span>↗</span>
+            </button>
+          </div>
+        </header>
+        <div
+          id="notice"
+          class="notice"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+        <section class="intro">
+          <div>
+            <div class="eyebrow">SLOW AND STEADY</div>
+            <h1>Room for what matters.</h1>
+            <p>See what’s ahead. Make your next move with confidence.</p>
+          </div>
+          <div class="workspace-controls">
+            <label
+              >Financial profile<select
+                id="profile"
+                aria-label="Financial profile"
+                disabled
+              ></select></label
+            ><label
+              >Balance as of<input
+                type="date"
+                id="as-of"
+                min="2000-01-01"
+                max="2100-01-01"
+                required
+            /></label>
+          </div>
+        </section>
+        <section class="summary-grid" aria-label="Financial overview">
+          <article class="balance-card">
+            <div class="card-label">Available balance <span>↗</span></div>
+            <div id="balance" class="big-number">—</div>
+            <p>From your selected financial profile</p>
+            <div class="balance-foot">
+              <span>Protected minimum</span><strong id="minimum">—</strong>
+            </div>
+          </article>
+          <article class="metric-card">
+            <div class="card-label">Forecast room to spend</div>
+            <div id="safe" class="metric-number">—</div>
+            <p>
+              Across the 90-day forecast.<br />Before new updates or a purchase.
+            </p>
+          </article>
+          <article class="metric-card flow-card">
+            <div class="card-label">On the horizon</div>
+            <div class="flow-row">
+              <span><i class="flow-icon">↙</i> Expected income</span
+              ><strong id="income">—</strong>
+            </div>
+            <div class="flow-row">
+              <span><i class="flow-icon expense">↗</i> Scheduled expenses</span
+              ><strong id="expenses">—</strong>
+            </div>
+            <p>Expected within the next 30 days</p>
+          </article>
+        </section>
+        <section id="planner" class="planner-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">THE NEXT THOUGHTFUL STEP</span>
+              <h2>Let’s make a little plan.</h2>
+            </div>
+            <span class="section-index">01 / PURCHASE PLANNER</span>
+          </div>
+          <div class="planner-grid">
+            <form id="plan-form" class="plan-form">
+              <div class="form-heading">
+                <span class="step-circle">1</span>
+                <h3>What’s on your mind?</h3>
+              </div>
+              <label for="question" class="sr-only">Purchase question</label
+              ><textarea
+                id="question"
+                maxlength="8000"
+                required
+                placeholder="Can I buy a desk for INR 6000 by 2026-11-05?"
+                rows="3"
+              ></textarea>
+              <div
+                id="examples"
+                class="examples"
+                aria-label="Try a sample question"
+              ></div>
+              <div class="form-heading update-heading">
+                <span class="step-circle">2</span>
+                <h3>Anything changed?</h3>
+                <span class="optional">OPTIONAL</span>
+              </div>
+              <p class="field-help">
+                Add a bill or a change to an existing bill. Include its amount,
+                currency and due date.
+              </p>
+              <div id="documents"></div>
+              <div class="document-actions">
+                <button type="button" id="add-document" class="text-button">
+                  ＋ Add a text update</button
+                ><label class="text-button upload-text"
+                  >↑ Upload .txt<input
+                    type="file"
+                    id="txt-input"
+                    accept=".txt,text/plain"
+                    multiple
+                /></label>
+              </div>
+              <div class="privacy-note">
+                <span aria-hidden="true">◇</span>
+                <p>
+                  Your question and text updates are sent to Google’s Gemma API.
+                  Hosted Laya receives workflow flags only. Financial
+                  calculations run locally.
+                </p>
+              </div>
+              <button id="submit" class="button primary" type="submit">
+                Find a steady way forward <span>↗</span>
+              </button>
+              <p class="submit-caption">
+                A forecast, never a payment. You stay in control.
+              </p>
+            </form>
+            <div class="result-panel" id="result-panel" aria-live="polite">
+              <div id="result-empty" class="result-empty">
+                <div class="orbit" aria-hidden="true"><span>✳</span></div>
+                <span class="eyebrow">A CLEARER PICTURE</span>
+                <h3>Good decisions start<br />with a little perspective.</h3>
+                <p>
+                  Ask about a purchase. We’ll account for upcoming bills and
+                  your protected balance, then show you the reasoning.
+                </p>
+                <div class="result-promises">
+                  <span>01 &nbsp; Check the facts</span
+                  ><span>02 &nbsp; Forecast your balance</span
+                  ><span>03 &nbsp; Find your next step</span>
+                </div>
+              </div>
+              <div id="result" hidden></div>
+            </div>
+          </div>
+        </section>
+        <section id="ledger" class="ledger-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">THE DAYS AHEAD</span>
+              <h2>A view of your commitments.</h2>
+            </div>
+            <span class="section-index">02 / UPCOMING ACTIVITY</span>
+          </div>
+          <div class="ledger-card">
+            <div class="ledger-top">
+              <h3>Scheduled activity</h3>
+              <span id="event-count" class="muted"></span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Activity</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="amount">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="events"></tbody>
+              </table>
+            </div>
+            <p class="ledger-note">
+              Your imported schedule is the starting point. Text updates are
+              applied to each purchase forecast.
+            </p>
+          </div>
+        </section>
+        <footer>
+          <span class="footer-brand">orcha</span
+          ><span>A calmer relationship with what’s next.</span
+          ><a href="/static/ASSETS.md">Type &amp; credits ↗</a>
+        </footer>
+      </main>
+    </div>
+    <dialog id="guide" aria-labelledby="guide-title">
+      <p id="guide-notice" role="alert" hidden></p>
+      <div class="dialog-top">
+        <span class="eyebrow">YOUR LOCAL WORKSPACE</span
+        ><button
+          id="guide-close"
+          class="text-button"
+          aria-label="Close import guide"
+        >
+          Close ×
+        </button>
+      </div>
+      <h2 id="guide-title">Start with your numbers.</h2>
+      <p>
+        Import Orcha-format CSVs to plan with your own finances. Download the
+        sample bundle, extract it, and replace the fictional records with your
+        own.
+      </p>
+      <div class="dialog-actions">
+        <a class="button secondary" href="/api/template"
+          >Download sample CSVs ↓</a
+        ><label class="button primary import-button"
+          >Choose eight CSVs ↗<input
+            id="csv-input"
+            type="file"
+            accept=".csv"
+            multiple
+            aria-label="Choose eight CSV files"
+        /></label>
+      </div>
+      <details>
+        <summary>Files and format</summary>
+        <p id="import-files" class="file-list"></p>
+        <p>
+          Keep the column headers, use ISO dates and three-letter currencies,
+          and select all eight files together. Files may be header-only where
+          appropriate. Up to 5 MB per file and 8 MB per request. Receipt images
+          and PDFs are not supported by this upload.
+        </p>
+      </details>
+      <h3>A fresh view, every session.</h3>
+      <p>
+        Imports stay in memory on this computer. They are cleared when the
+        server restarts. Your source CSVs are never changed. Set “Balance as of”
+        to the date your imported balance was reconciled.
+      </p>
+      <h3>Where your data goes</h3>
+      <p id="provider-status"></p>
+      <p>
+        Laya receives workflow flags only. Balances, transaction history,
+        forecasts and verification stay in the local Python app. This workspace
+        is for one person on this computer.
+      </p>
+    </dialog>
+  </body>
+</html>
