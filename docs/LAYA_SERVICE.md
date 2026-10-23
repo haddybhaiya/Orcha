@@ -1,5 +1,10 @@
 # Laya on InstaCloud
 
+October 23 refinement: the existing endpoint now runs the task-specific
+`orcha-workflow-v1` scorer. All four live production routing stages pass. The
+candidate also passed three live Gemma scenarios. See [experiments, limits and
+deployment status](LAYA_REFINEMENT.md). Results below describe the original deployment.
+
 Verified October 22, 2026. Orcha calls Laya remotely; the laptop does not install
 PyTorch, load the checkpoint, or need a GPU. Python retains financial authority.
 

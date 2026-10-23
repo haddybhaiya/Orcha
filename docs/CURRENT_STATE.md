@@ -4,6 +4,9 @@ Updated October 23, 2026. The active brief is [plan.md](../plan.md).
 
 ## Working
 
+- Deployed Laya workflow v1: normalized input and a 768-weight scorer adaptation.
+  All four production routing stages pass. Three candidate Gemma scenarios pass;
+  see [LAYA_REFINEMENT.md](LAYA_REFINEMENT.md) for scope and verification.
 - Local web workspace with CSV imports, text updates, cash-flow chart, verified
   recommendations, source evidence, and model/fallback traces. See [WEB_INTERFACE.md](WEB_INTERFACE.md).
 - Local CSV financial imports, typed Decimal money, and dated FX normalization.
