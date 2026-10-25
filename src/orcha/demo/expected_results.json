@@ -1,0 +1,18 @@
+{
+  "demo_before_bill": {
+    "amount_safe_to_pay": "25000.00",
+    "affordability_status": "affordable_now",
+    "recommended_payment_method": "full_payment",
+    "payment_plan": "2026-10-21:25000",
+    "earliest_date_for_full_payment": "2026-10-21",
+    "spending_changes_needed": "none"
+  },
+  "demo_after_bill": {
+    "amount_safe_to_pay": "18000.00",
+    "affordability_status": "affordable_later",
+    "recommended_payment_method": "wait",
+    "payment_plan": "2026-10-25:25000",
+    "earliest_date_for_full_payment": "2026-10-25",
+    "spending_changes_needed": "none"
+  }
+}

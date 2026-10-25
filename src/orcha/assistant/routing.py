@@ -2,7 +2,6 @@
 
 import json
 import math
-import os
 import time
 import urllib.error
 import urllib.request
@@ -11,6 +10,8 @@ from typing import Any, Literal, Protocol
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from orcha.environment import settings
 
 Action = Literal["interpret_request", "ask_clarification", "run_forecast", "explain_result"]
 
@@ -119,42 +120,58 @@ class RemoteLayaRouter:
                 raise TimeoutError("Laya startup deadline expired")
             return min(self.timeout_seconds, seconds)
 
+        request_timeout = remaining()
         try:
-            return read_json(opener.open(request, timeout=remaining()))
+            return read_json(opener.open(request, timeout=request_timeout))
         except urllib.error.HTTPError as error:
-            if error.code != 503:
+            if error.code not in {502, 503, 504}:
                 raise
-            # A reachable process can still be loading its checkpoint after waking.
-            # Only this explicit service response permits readiness polling.
-            if read_json(error) != {"error": "model_unavailable"}:
-                raise ValueError("Unexpected Laya availability response") from None
+            error.close()
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            # Infrastructure may time out before the model process can answer.
+            pass
         readiness = urllib.request.Request(self.url.rstrip("/") + "/ready")
         while True:
+            request_timeout = remaining()
             try:
-                response = opener.open(readiness, timeout=remaining())
+                response = opener.open(readiness, timeout=request_timeout)
             except urllib.error.HTTPError as error:
-                if error.code != 503:
+                if error.code not in {502, 503, 504}:
                     raise
                 response = error
-            status = read_json(response).get("status")
+            except (urllib.error.URLError, TimeoutError, ConnectionError):
+                time.sleep(min(1, remaining()))
+                continue
+            try:
+                payload = read_json(response)
+            except (ValueError, OSError):
+                if getattr(response, "code", 200) not in {502, 503, 504}:
+                    raise
+                time.sleep(min(1, remaining()))
+                continue
+            status = payload.get("status") if isinstance(payload, dict) else None
             if status == "ready":
                 return read_json(opener.open(request, timeout=remaining()))
             if status != "loading":
+                if getattr(response, "code", 200) in {502, 503, 504} and status != "failed":
+                    time.sleep(min(1, remaining()))
+                    continue
                 raise ValueError("Laya model initialization failed")
             time.sleep(min(1, remaining()))
 
 
 def router_from_environment() -> ActionRouter | None:
     """Absent or invalid optional settings must not break the working Gemma flow."""
-    url, token = os.getenv("LAYA_API_URL"), os.getenv("LAYA_API_TOKEN")
+    values = settings()
+    url, token = values.get("LAYA_API_URL"), values.get("LAYA_API_TOKEN")
     if not url or not token:
         return None
     try:
         return RemoteLayaRouter(
             url,
             token,
-            float(os.getenv("LAYA_TIMEOUT_SECONDS", "8")),
-            float(os.getenv("LAYA_STARTUP_TIMEOUT_SECONDS", "45")),
+            float(values.get("LAYA_TIMEOUT_SECONDS", "8")),
+            float(values.get("LAYA_STARTUP_TIMEOUT_SECONDS", "45")),
         )
     except ValueError:
         return None
@@ -169,7 +186,7 @@ class RoutingSession:
         self.decisions: list[RoutingDecision] = []
         self.unavailable = False
         try:
-            threshold = float(os.getenv("LAYA_MIN_CONFIDENCE", "0.8"))
+            threshold = float(settings().get("LAYA_MIN_CONFIDENCE", "0.8"))
             self.threshold = threshold if math.isfinite(threshold) and 0 <= threshold <= 1 else 0.8
         except ValueError:
             self.threshold = 0.8

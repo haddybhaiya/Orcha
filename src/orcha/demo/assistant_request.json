@@ -1,0 +1,14 @@
+{
+  "user_id": "demo_before",
+  "as_of": "2026-10-21",
+  "question": {
+    "source_id": "purchase_question",
+    "text": "Can I buy a laptop for INR 25000.00 by 2026-10-30? Keep my imported minimum balance and payment preferences."
+  },
+  "documents": [
+    {
+      "source_id": "repair_notice",
+      "text": "Invoice DEMO-REPAIR-01: Your confirmed one-off appliance repair bill is INR 12000.00 due on 2026-10-23. The invoice is unpaid."
+    }
+  ]
+}

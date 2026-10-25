@@ -62,7 +62,11 @@ class ExchangeRateResolver:
 
     def add_rate(self, rate: ExchangeRate) -> None:
         """Register a single exchange rate."""
+        if not rate.rate.is_finite() or rate.rate <= 0:
+            raise ValueError("Exchange rates must be finite and positive")
         key = (rate.rate_date, rate.from_currency, rate.to_currency)
+        if key in self._rates and self._rates[key] != rate.rate:
+            raise ValueError("Conflicting exchange rates for the same pair and date")
         self._rates[key] = rate.rate
         self._pairs.add((rate.from_currency, rate.to_currency))
         self._dates.add(rate.rate_date)
