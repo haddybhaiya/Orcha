@@ -5,6 +5,7 @@ Coordinates candidate generation, verification, ranking, and explanation.
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 
 from orcha.evidence.images import ImageEvidenceExtractor
@@ -17,6 +18,7 @@ from orcha.models import (
     OutputRow,
     RecommendedPaymentMethod,
 )
+from orcha.planning.budget import MAX_PLANNING_SECONDS, PlanningBudgetExceeded
 from orcha.planning.candidates import generate_candidate_plans
 from orcha.planning.explanations import generate_decision_explanation
 from orcha.planning.rank import rank_candidate_plans
@@ -55,6 +57,7 @@ class DecisionEngine:
 
     def evaluate_financial_request(self, request: FinancialRequest) -> DecisionResult:
         """Evaluate a typed request without consulting public sample labels."""
+        started = time.monotonic()
         profile = self.repository.get_profile(request.user_id)
         raw_events = self.repository.get_events_for_user(request.user_id)
         options = self.repository.get_payment_options(request.request_id)
@@ -83,6 +86,10 @@ class DecisionEngine:
         # 4. Verify candidate plans through 90-day simulation replay
         safe_candidates: list[CandidatePlan] = []
         for candidate in candidates:
+            if time.monotonic() - started > MAX_PLANNING_SECONDS:
+                raise PlanningBudgetExceeded(
+                    "Planning exceeded its time budget; narrow the request"
+                )
             is_safe, _ = verify_plan_safety(
                 profile=profile,
                 resolved_events=resolved_events,

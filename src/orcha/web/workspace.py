@@ -16,6 +16,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from orcha.assistant.contracts import ExtractionResponse, InterpretationContext
+from orcha.demo import DATASET_DIR
 from orcha.evidence.provider import StructuredEvidenceProvider
 from orcha.loaders import REQUIRED_DATASET_FILES
 from orcha.repository import DatasetRepository
@@ -25,7 +26,7 @@ from orcha.simulation.forecast import simulate
 from orcha.simulation.timeline import get_forecast_window
 
 DEMO_DATE = date(2026, 10, 21)
-DEMO_DIR = Path(__file__).resolve().parents[3] / "demo" / "dataset"
+DEMO_DIR = DATASET_DIR
 
 
 class UploadedCSV(BaseModel):
@@ -92,7 +93,8 @@ def validate_repository(repository: DatasetRepository) -> None:
             event.minimum_allowed_amount,
         ]:
             if event_amount is not None and (
-                not event_amount.is_finite() or abs(event_amount) > Decimal("1000000000000")
+                not event_amount.is_finite()
+                or not Decimal("0") <= event_amount <= Decimal("1000000000000")
             ):
                 raise ValueError("Invalid event amount")
 
@@ -101,7 +103,10 @@ class Workspace:
     def __init__(self, dataset: Path) -> None:
         self.repository = DatasetRepository.load_from_dir(dataset)
         validate_repository(self.repository)
-        self.is_demo = dataset.resolve() == DEMO_DIR.resolve()
+        self.is_demo = dataset.resolve() in {
+            DEMO_DIR.resolve(),
+            (Path(__file__).resolve().parents[3] / "demo" / "dataset").resolve(),
+        }
         self.lock = threading.Lock()
         self.provider: SessionProvider | None = None
 

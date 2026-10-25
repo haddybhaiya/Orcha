@@ -1,5 +1,6 @@
 """Loopback-only HTTP boundary. Financial content and API secrets stay server-side."""
 
+import hashlib
 import hmac
 import json
 import secrets
@@ -63,6 +64,9 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
                 "prompt": PROMPT_VERSION,
                 "model": config.model,
                 "output_tokens": config.max_output_tokens,
+                "credential": hashlib.sha256(config.api_key.encode()).hexdigest(),
+                "timeout": config.timeout_seconds,
+                "cache_dir": str(config.cache_dir),
             },
             sort_keys=True,
         )
