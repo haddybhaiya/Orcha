@@ -1,0 +1,3 @@
+request_id,user_id,request_date,request_type,requested_amount,desired_completion_date,allows_partial_payment,request_text
+demo_before_bill,demo_before,2026-10-21,purchase,25000.00,2026-10-30,false,Can I buy a laptop for INR 25000 by October 30 while keeping my minimum balance?
+demo_after_bill,demo_after,2026-10-21,purchase,25000.00,2026-10-30,false,After the new INR 12000 repair bill can I still buy the same laptop by October 30?

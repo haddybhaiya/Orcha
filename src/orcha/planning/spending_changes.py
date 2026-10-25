@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import math
 from collections import defaultdict
 from decimal import Decimal
 
@@ -13,6 +14,7 @@ from orcha.models import (
     SpendingChange,
     SpendingChangeAction,
 )
+from orcha.planning.budget import MAX_CHANGE_COMBINATIONS, PlanningBudgetExceeded
 
 
 def find_eligible_spending_actions(
@@ -93,6 +95,13 @@ def generate_spending_change_combinations(
     Alternative stop/reduce actions for the same stream are mutually exclusive.
     """
     eligible = find_eligible_spending_actions(profile, events)
+    upper_bound = sum(
+        math.comb(len(eligible), k) for k in range(1, min(len(eligible), max_changes) + 1)
+    )
+    if upper_bound > MAX_CHANGE_COMBINATIONS:
+        raise PlanningBudgetExceeded(
+            "Too many spending adjustments; narrow the permitted categories"
+        )
     combinations: list[tuple[int, Decimal, list[SpendingChange]]] = []
 
     for k in range(1, min(len(eligible) + 1, max_changes + 1)):

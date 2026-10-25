@@ -60,7 +60,7 @@ async function api(path, body) {
     data = await response.json();
   } catch {
     throw Error(
-      "The local server returned an unreadable response. Please try again.",
+      "The server returned an unreadable response. Please try again.",
     );
   }
   if (!response.ok) {
@@ -72,6 +72,17 @@ async function api(path, body) {
           ? detail.map((item) => item.msg || "Invalid input").join("; ")
           : "The request could not be completed. Please try again.",
     );
+  }
+  if (data.job_id) {
+    // Hosted model calls can outlast a gateway request. Poll an expiring result.
+    const deadline = Date.now() + 240000;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const job = await api("/api/jobs/" + encodeURIComponent(data.job_id));
+      if (job.status === "done") return job.result;
+      if (job.status === "failed") throw Error(job.detail);
+    }
+    throw Error("The forecast is taking too long. Please try again shortly.");
   }
   return data;
 }
@@ -98,6 +109,25 @@ function clearResult() {
 }
 function renderWorkspace(data) {
   workspace = data;
+  const hosted = Boolean(data.public_demo);
+  $("deployment-note").hidden = !hosted;
+  $("deployment-note").textContent = hosted
+    ? "Public demo · fictional finances only. No login or saved history. Text is processed on our server and sent to Google for interpretation."
+    : "";
+  $("processing-location").textContent = hosted
+    ? "Calculated on our server"
+    : "Calculated on your device";
+  $("reset").hidden = hosted;
+  $("import-open").textContent = hosted ? "About this demo" : "Import finances ↗";
+  $("csv-input").closest("label").hidden = hosted;
+  $("workspace-mode-caption").textContent = hosted ? "PUBLIC DEMONSTRATION" : "YOUR LOCAL WORKSPACE";
+  $("guide-title").textContent = hosted ? "Try a little clarity." : "Start with your numbers.";
+  if (hosted) {
+    $("import-description").textContent = "Try the sample questions or write a fictional purchase and bill. CSV imports are available when you run Orcha locally.";
+    $("retention-note").textContent = "No accounts or saved financial history. Results expire after ten minutes; the demo handles one forecast at a time, up to 60 requests per hour across visitors.";
+    $("processing-note").textContent = "Gemma interprets your selected text through Google. The financial engine runs on our hosted server, and Laya receives workflow flags only. Use fictional data here.";
+    $("planner-privacy").textContent = "Use fictional data. Selected text goes to Google for interpretation; calculations run on our hosted Python server. No account or saved history.";
+  }
   $("data-badge").textContent = data.is_demo
     ? "SYNTHETIC DEMO"
     : "IMPORTED WORKSPACE";
@@ -203,7 +233,9 @@ function renderWorkspace(data) {
   renderForecast(data.timeline, "Imported cash flow · before new updates");
   $("provider-status").textContent = data.providers.gemma_configured
     ? "Gemma is configured. Selected questions and text updates go to Google for interpretation."
-    : "To interpret fresh questions, add GEMMA_API_KEY to the local .env file. Then reload this page.";
+    : hosted
+      ? "Demo interpretation is temporarily unavailable. Please try again later."
+      : "To interpret fresh questions, add GEMMA_API_KEY to the local .env file. Then reload this page.";
   $("import-files").textContent = data.import_files.join(" · ");
   clearResult();
 }
@@ -423,7 +455,7 @@ function renderResult(data) {
       "div",
       "result-kicker",
       complete
-        ? "VERIFIED BY THE LOCAL ENGINE"
+        ? "VERIFIED BY THE FINANCIAL ENGINE"
         : data.status === "needs_clarification"
           ? "A LITTLE MORE CLARITY"
           : "UNABLE TO COMPLETE",
@@ -701,7 +733,7 @@ $("plan-form").addEventListener("submit", async (event) => {
     el(
       "p",
       "",
-      "Interpreting your updates and checking the local financial forecast. This can take a moment.",
+      "Interpreting your updates and checking the financial forecast. This can take a moment.",
     ),
   );
   $("result").replaceChildren(loading);

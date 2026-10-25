@@ -98,6 +98,23 @@ def test_fresh_bill_changes_verified_recommendation_without_mutating_import(
     assert [e.model_dump() for e in repo.all_events] == original
 
 
+def test_search_budget_exhaustion_requests_clarification(
+    repo: DatasetRepository, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from orcha.planning.budget import PlanningBudgetExceeded
+
+    def exceed(*args: Any) -> None:
+        raise PlanningBudgetExceeded("Search budget exceeded")
+
+    monkeypatch.setattr("orcha.assistant.controller.DecisionEngine.evaluate_request", exceed)
+    result = run_assistant(
+        input_request(), repo, FakeProvider(Extraction.model_validate(extraction_data()))
+    )
+    assert result.status == "needs_clarification"
+    assert result.decision is None
+    assert "Narrow" in result.questions[0]
+
+
 def test_scheduled_bill_amendment_replaces_obligation_instead_of_double_counting(
     repo: DatasetRepository,
 ) -> None:

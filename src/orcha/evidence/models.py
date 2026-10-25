@@ -57,6 +57,7 @@ class ImageEvidence:
     document_type: str
     description: str
     confidence: float = 1.0
+    source_sha256: str | None = None
 
 
 @dataclass(frozen=True)

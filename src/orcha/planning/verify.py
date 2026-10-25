@@ -97,6 +97,15 @@ def _contract_error(
         )
         if option is None or not is_option_eligible(option, profile):
             return "installment plan has no eligible supplied payment option"
+        total = sum((payment.amount for payment in plan.payments), Decimal("0"))
+        if (
+            option.request_id != request.request_id
+            or not option.financing_fee.is_finite()
+            or option.financing_fee < 0
+            or total != option.total_payable_amount
+            or total != request.requested_amount + option.financing_fee
+        ):
+            return "installment payments must cover the purchase and stated financing fee"
         expected = build_installment_plan(option, request)
         if plan.payments != expected.payments or plan.total_cost != option.total_payable_amount:
             return "installment schedule does not exactly follow its supplied option"

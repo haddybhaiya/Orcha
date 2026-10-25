@@ -1,5 +1,10 @@
 # Orcha local workspace
 
+A [public synthetic demo](PUBLIC_DEMO.md) is also deployed on InstaCloud.
+The instructions and local-processing descriptions below refer to local use.
+The hosted demo runs its financial engine on the server, disables CSV imports,
+and uses short-lived background results instead of durable user accounts.
+
 Run from the repository root with Python 3.11 or later:
 
 ```powershell

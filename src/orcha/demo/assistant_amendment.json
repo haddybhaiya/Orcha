@@ -1,0 +1,15 @@
+{
+  "user_id": "demo_after",
+  "as_of": "2026-10-21",
+  "question": {
+    "source_id": "purchase_question",
+    "text": "Can I buy a laptop for INR 25000.00 by 2026-10-30?"
+  },
+  "documents": [
+    {
+      "source_id": "revised_repair_notice",
+      "related_event_id": "demo_after_repair",
+      "text": "The corrected total for your confirmed unpaid repair invoice DEMO-REPAIR-01 is INR 15000.00. Payment is due on 2026-10-23. This replaces the previous invoice amount."
+    }
+  ]
+}

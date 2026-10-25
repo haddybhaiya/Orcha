@@ -32,6 +32,7 @@ from orcha.models import (
     RequestType,
 )
 from orcha.money import ExchangeRateError, quantize_money
+from orcha.planning.budget import PlanningBudgetExceeded
 from orcha.planning.engine import DecisionEngine
 from orcha.repository import DatasetRepository
 from orcha.simulation.forecast import simulate
@@ -420,6 +421,15 @@ def run_assistant(
                 )
                 for point in forecast.daily_records
             ]
+    except PlanningBudgetExceeded:
+        return clarify(
+            [
+                "This request has too many possible plans. Narrow the permitted spending changes "
+                "or payment options and try again."
+            ],
+            actions,
+            usage,
+        )
     except (ExchangeRateError, ValueError, KeyError, ArithmeticError):
         return clarify(
             [

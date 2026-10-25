@@ -30,7 +30,7 @@
           ><a href="#ledger"><span>≡</span> Upcoming activity</a>
         </nav>
         <div class="sidebar-bottom">
-          <span class="local-dot"></span> Calculated on your device
+          <span class="local-dot"></span><span id="processing-location">Calculated on your device</span>
           <p>Financial clarity, one thoughtful<br />decision at a time.</p>
           <a href="/api/template">Download sample CSVs ↗</a>
         </div>
@@ -55,6 +55,7 @@
           aria-live="polite"
           hidden
         ></div>
+        <div id="deployment-note" class="notice" role="note" hidden></div>
         <section class="intro">
           <div>
             <div class="eyebrow">SLOW AND STEADY</div>
@@ -157,7 +158,7 @@
               </div>
               <div class="privacy-note">
                 <span aria-hidden="true">◇</span>
-                <p>
+                <p id="planner-privacy">
                   Your question and text updates are sent to Google’s Gemma API.
                   Hosted Laya receives workflow flags only. Financial
                   calculations run locally.
@@ -231,7 +232,7 @@
     <dialog id="guide" aria-labelledby="guide-title">
       <p id="guide-notice" role="alert" hidden></p>
       <div class="dialog-top">
-        <span class="eyebrow">YOUR LOCAL WORKSPACE</span
+        <span class="eyebrow" id="workspace-mode-caption">YOUR LOCAL WORKSPACE</span
         ><button
           id="guide-close"
           class="text-button"
@@ -241,7 +242,7 @@
         </button>
       </div>
       <h2 id="guide-title">Start with your numbers.</h2>
-      <p>
+      <p id="import-description">
         Import Orcha-format CSVs to plan with your own finances. Download the
         sample bundle, extract it, and replace the fictional records with your
         own.
@@ -269,14 +270,14 @@
         </p>
       </details>
       <h3>A fresh view, every session.</h3>
-      <p>
+      <p id="retention-note">
         Imports stay in memory on this computer. They are cleared when the
         server restarts. Your source CSVs are never changed. Set “Balance as of”
         to the date your imported balance was reconciled.
       </p>
       <h3>Where your data goes</h3>
       <p id="provider-status"></p>
-      <p>
+      <p id="processing-note">
         Laya receives workflow flags only. Balances, transaction history,
         forecasts and verification stay in the local Python app. This workspace
         is for one person on this computer.

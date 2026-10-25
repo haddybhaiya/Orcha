@@ -195,6 +195,7 @@ def test_sample_id_collision_cannot_overwrite_production_request(
     assert repo.get_sample_request("request_01").requested_amount == Decimal("1")
 
 
+@pytest.mark.private_data
 def test_real_dataset_smoke_and_audit() -> None:
     """Load the full real dataset from dataset/ and verify exact observed counts."""
     dataset_dir = Path("dataset") if Path("dataset").is_dir() else Path("../dataset")
@@ -220,6 +221,7 @@ def test_real_dataset_smoke_and_audit() -> None:
     assert audit_results["foreign_events"]["covered_by_fx"] == 140
 
 
+@pytest.mark.private_data
 def test_default_repository_load_excludes_sample_oracle() -> None:
     """Production construction is invariant to the presence of sample labels."""
     dataset_dir = Path("dataset") if Path("dataset").is_dir() else Path("../dataset")

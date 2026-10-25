@@ -67,12 +67,10 @@ def resolve_canonical_ledger(
         if ev.amount is None:
             img_evidence = images.get_by_event_id(ev.event_id)
             image_record = repository.get_image_for_event(ev.event_id)
-            image_file_exists = (
-                repository.dataset_dir is None
-                or image_record is None
-                or (
-                    repository.dataset_dir / "media" / "images" / f"{image_record.image_id}.png"
-                ).is_file()
+            image_file = (
+                repository.dataset_dir / "media" / "images" / f"{image_record.image_id}.png"
+                if repository.dataset_dir is not None and image_record is not None
+                else None
             )
             cache_matches_source = (
                 img_evidence is not None
@@ -80,7 +78,8 @@ def resolve_canonical_ledger(
                 and img_evidence.image_id == image_record.image_id
                 and img_evidence.user_id == ev.user_id
                 and img_evidence.related_event_id == ev.event_id
-                and image_file_exists
+                and image_file is not None
+                and images.matches_source(img_evidence, image_file)
             )
             if cache_matches_source and img_evidence is not None:
                 img_amt = img_evidence.amount
@@ -226,6 +225,7 @@ def resolve_canonical_ledger(
         end_date=forecast_end_date,
         patterns=patterns,
         existing_events=amended_events,
+        fx_resolver=repository.fx_resolver,
     )
     resolved_list.extend(projected_recurring)
 

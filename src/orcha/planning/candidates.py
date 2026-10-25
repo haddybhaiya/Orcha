@@ -14,6 +14,7 @@ from orcha.models import (
     PlanPayment,
     RecommendedPaymentMethod,
 )
+from orcha.planning.budget import MAX_CANDIDATES, PlanningBudgetExceeded
 from orcha.planning.installments import build_installment_plan, is_option_eligible
 from orcha.planning.partial import (
     build_partial_payment_plan,
@@ -110,6 +111,8 @@ def generate_candidate_plans(
             RecommendedPaymentMethod.INSTALLMENTS,
         )
     ]
+    if len(candidates) + len(changeable) * len(change_combos) > MAX_CANDIDATES:
+        raise PlanningBudgetExceeded("Too many candidate payment plans; narrow the request")
     for plan in changeable:
         for index, combo in enumerate(change_combos):
             candidates.append(

@@ -1,0 +1,2 @@
+message_id,user_id,request_id,related_event_id,sent_at,source_type,message_text
+demo_repair_notice,demo_after,demo_after_bill,demo_after_repair,2026-10-21T09:00:00+05:30,service_provider,DEMO ONLY: Your appliance repair bill is INR 12000.00 due on 2026-10-23. This is a one-off charge.

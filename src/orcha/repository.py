@@ -33,6 +33,30 @@ class DatasetRepository:
         sample_requests: list[FinancialRequest] | None = None,
         dataset_dir: Path | None = None,
     ) -> None:
+        for label, identifiers in [
+            ("request", [r.request_id for r in requests]),
+            ("sample request", [r.request_id for r in sample_requests or []]),
+            ("event", [e.event_id for e in events]),
+            ("message", [m.message_id for m in messages]),
+            ("image", [i.image_id for i in images]),
+            (
+                "payment option",
+                [o.payment_option_id for group in payment_options.values() for o in group],
+            ),
+        ]:
+            if any(not identifier.strip() for identifier in identifiers):
+                raise ValueError(f"Blank {label} ID")
+            if len(set(identifiers)) != len(identifiers):
+                raise ValueError(f"Duplicate {label} ID")
+        for key, profile in profiles.items():
+            if key != profile.user_id:
+                raise ValueError("Profile key must match user ID")
+        for event in events:
+            if event.user_id not in profiles:
+                raise ValueError("Event owner does not exist")
+            for amount in (event.amount, event.amount_home_currency, event.minimum_allowed_amount):
+                if amount is not None and (not amount.is_finite() or amount < 0):
+                    raise ValueError("Event amounts must be finite and non-negative")
         self.all_requests = requests
         self.sample_requests = sample_requests or []
         self.all_profiles = profiles
