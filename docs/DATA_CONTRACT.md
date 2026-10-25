@@ -23,7 +23,7 @@ This document defines the schema, data types, and normalization rules for all da
 | --- | --- | --- |
 | `user_id` | `str` | Unique user ID |
 | `home_currency` | `str` | Currency code: `ZAR`, `IDR`, `EUR`, `INR`, `USD` |
-| `current_available_balance` | `Decimal` | Starting liquid balance |
+| `current_available_balance` | `Decimal` | Starting liquid balance, including settled activity through the reference date |
 | `minimum_balance_to_keep` | `Decimal` | Minimum liquid balance safety floor |
 | `financial_priorities` | `list[str]` | Pipe-separated priority categories |
 | `expense_categories_to_protect` | `list[str]` | Non-negotiable spending categories |

@@ -106,6 +106,8 @@ def load_profiles(file_path: Path) -> dict[str, FinancialProfile]:
         for row_idx, row in enumerate(reader, start=2):
             try:
                 user_id = row["user_id"].strip()
+                if user_id in profiles:
+                    raise ValueError(f"Duplicate profile ID: {user_id}")
                 methods_raw = _clean_pipe_list(row.get("payment_methods_user_will_consider"))
                 methods = [RecommendedPaymentMethod(m) for m in methods_raw]
 

@@ -1,5 +1,10 @@
 # Laya workflow refinement
 
+October 25 follow-up: repository code now also handles infrastructure wake errors
+and exits after failed model initialization. These service lifecycle changes are
+not in the image documented below until a new deployment. See
+[review corrections](REVIEW_FIXES.md).
+
 October 23, 2026. The refined image was verified on the isolated `laya-refinement`
 branch, then deployed to the existing `laya-service` endpoint with user approval.
 The app's `.env` URL and credentials have not changed. Production readiness verifies

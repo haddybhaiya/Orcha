@@ -166,7 +166,10 @@ def make_handler(runtime: ModelRuntime, token: str) -> type[BaseHTTPRequestHandl
 
         def do_GET(self) -> None:
             if self.path == "/health":
-                self.respond(200, {"status": "alive"})
+                self.respond(
+                    503 if runtime.error else 200,
+                    {"status": "failed" if runtime.error else "alive"},
+                )
             elif self.path == "/ready":
                 ready = runtime.agent is not None
                 self.respond(
@@ -213,6 +216,13 @@ class DualStackServer(ThreadingHTTPServer):
         super().server_bind()
 
 
+def load_or_exit(runtime: ModelRuntime) -> None:
+    """A failed checkpoint must restart the process, not remain healthy forever."""
+    runtime.load()
+    if runtime.error:
+        os._exit(1)
+
+
 if __name__ == "__main__":
     secret = os.environ.get("LAYA_API_TOKEN", "")
     if len(secret) < 16:
@@ -221,5 +231,5 @@ if __name__ == "__main__":
     server = DualStackServer(
         ("::", int(os.environ.get("PORT", "8080"))), make_handler(model, secret)
     )
-    threading.Thread(target=model.load, daemon=True).start()
+    threading.Thread(target=load_or_exit, args=(model,), daemon=True).start()
     server.serve_forever()

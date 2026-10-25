@@ -165,7 +165,7 @@ class FinancialRequest(BaseModel):
     user_id: str
     request_date: date
     request_type: RequestType
-    requested_amount: Decimal
+    requested_amount: Decimal = Field(gt=0, le=Decimal("1000000000000"))
     desired_completion_date: date
     allows_partial_payment: bool
     request_text: str
@@ -179,7 +179,7 @@ class FinancialProfile(BaseModel):
     user_id: str
     home_currency: str
     current_available_balance: Decimal
-    minimum_balance_to_keep: Decimal
+    minimum_balance_to_keep: Decimal = Field(ge=0, le=Decimal("1000000000000"))
     financial_priorities: list[str] = Field(default_factory=list)
     expense_categories_to_protect: list[str] = Field(default_factory=list)
     expense_categories_user_is_willing_to_reduce: list[str] = Field(default_factory=list)
@@ -249,12 +249,12 @@ class PaymentOption(BaseModel):
     payment_option_id: str
     request_id: str
     payment_method: PaymentOptionMethod
-    payment_amount: Decimal
-    number_of_payments: int
+    payment_amount: Decimal = Field(gt=0, le=Decimal("1000000000000"))
+    number_of_payments: int = Field(ge=1, le=120)
     first_payment_date: date
-    payment_frequency_days: int | None = None
-    financing_fee: Decimal = Decimal("0")
-    total_payable_amount: Decimal
+    payment_frequency_days: int | None = Field(default=None, ge=1, le=366)
+    financing_fee: Decimal = Field(default=Decimal("0"), ge=0)
+    total_payable_amount: Decimal = Field(gt=0, le=Decimal("1000000000000"))
 
 
 class ExchangeRate(BaseModel):
@@ -265,7 +265,7 @@ class ExchangeRate(BaseModel):
     rate_date: date
     from_currency: str
     to_currency: str
-    rate: Decimal
+    rate: Decimal = Field(gt=0)
 
 
 class MessageRecord(BaseModel):
