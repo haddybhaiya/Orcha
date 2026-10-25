@@ -82,6 +82,21 @@ def headers(client: TestClient) -> dict[str, str]:
     return {"X-Orcha-Token": client.get("/api/workspace").json()["csrf_token"]}
 
 
+def test_provider_refreshes_when_credentials_or_timeout_change(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client.get("/api/workspace")
+    old = client.app.state.workspace.provider  # type: ignore[attr-defined]
+    monkeypatch.setattr(
+        "orcha.web.app.GemmaConfig.from_environment",
+        lambda: GemmaConfig(api_key="changed-private-key", timeout_seconds=12),
+    )
+    client.get("/api/workspace")
+    new = client.app.state.workspace.provider  # type: ignore[attr-defined]
+    assert old is not new
+    assert "changed-private-key" not in new.identity
+
+
 def request_data() -> dict[str, Any]:
     return json.loads(Path("demo/assistant_request.json").read_text())  # type: ignore[no-any-return]
 

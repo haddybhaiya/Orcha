@@ -340,6 +340,7 @@ def test_decision_explanation_formatting(
     assert "leaves at least EUR 500 available" in expl
 
 
+@pytest.mark.private_data
 def test_decision_engine_evaluation() -> None:
     dataset_dir = Path("dataset")
     if not dataset_dir.is_dir():

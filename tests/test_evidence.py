@@ -98,6 +98,7 @@ def test_prompt_injection_defense() -> None:
     assert "[INJECTION_ATTEMPT_IGNORED]" in sanitized
 
 
+@pytest.mark.private_data
 def test_local_evidence_provider() -> None:
     provider = LocalEvidenceProvider()
     image_path = Path("dataset/media/images/image_01.png")

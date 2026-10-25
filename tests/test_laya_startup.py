@@ -105,3 +105,33 @@ def test_loading_has_a_total_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(TimeoutError):
         RemoteLayaRouter("https://example.com", "fake-token-long-enough").propose(state())
     assert len(paths) == 1
+
+
+@pytest.mark.parametrize("initial", [TimeoutError("wake timeout"), unavailable({}, 502)])
+def test_infrastructure_wake_failure_still_waits_for_ready(
+    monkeypatch: pytest.MonkeyPatch, initial: Exception
+) -> None:
+    expected = {"action": "interpret_request"}
+    paths = install(monkeypatch, [initial, unavailable({}, 504), {"status": "ready"}, expected])
+    assert (
+        RemoteLayaRouter("https://example.com", "fake-token-long-enough").propose(state())
+        == expected
+    )
+    assert len(paths) == 4
+
+
+def test_failed_model_exits_and_reports_unhealthy(monkeypatch: pytest.MonkeyPatch) -> None:
+    from services.laya.service import ModelRuntime, load_or_exit, make_handler
+
+    runtime = ModelRuntime()
+    monkeypatch.setattr(runtime, "load", lambda: setattr(runtime, "error", True))
+    exits: list[int] = []
+    monkeypatch.setattr("services.laya.service.os._exit", exits.append)
+    load_or_exit(runtime)
+    assert exits == [1]
+    handler = object.__new__(make_handler(runtime, "fake-token-long-enough"))
+    handler.path = "/health"
+    responses: list[tuple[int, dict[str, Any]]] = []
+    monkeypatch.setattr(handler, "respond", lambda status, value: responses.append((status, value)))
+    handler.do_GET()  # type: ignore[attr-defined]
+    assert responses == [(503, {"status": "failed"})]
