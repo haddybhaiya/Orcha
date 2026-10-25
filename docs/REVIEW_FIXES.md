@@ -1,10 +1,10 @@
 # Review corrections
 
 October 25, 2026. Repository fixes for the 16 findings in the read-only review.
-The original dataset and model adapter weights were not changed. No cloud
-deployment was performed for this patch; restart the local app after updating.
-The Laya service lifecycle changes take effect after rebuilding and redeploying
-`services/laya`. The currently deployed image remains the earlier verified image.
+The original dataset and model adapter weights were not changed. The Laya recovery
+changes were deployed to the existing production endpoint on October 25 after
+isolated live checks. Restart the local app after updating. See
+[deployment verification](DEPLOYMENT_VERIFICATION.md) for the image and results.
 
 | Finding | Correction |
 | --- | --- |

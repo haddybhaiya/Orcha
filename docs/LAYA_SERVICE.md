@@ -1,5 +1,9 @@
 # Laya on InstaCloud
 
+October 25 production update: review recovery fixes are deployed on the existing
+endpoint. See [deployment verification](DEPLOYMENT_VERIFICATION.md) for the current
+image and fresh live checks; the earlier measurements below are historical.
+
 October 23 refinement: the existing endpoint now runs the task-specific
 `orcha-workflow-v1` scorer. All four live production routing stages pass. The
 candidate also passed three live Gemma scenarios. See [experiments, limits and

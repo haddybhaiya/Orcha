@@ -1,9 +1,9 @@
 # Laya workflow refinement
 
-October 25 follow-up: repository code now also handles infrastructure wake errors
-and exits after failed model initialization. These service lifecycle changes are
-not in the image documented below until a new deployment. See
-[review corrections](REVIEW_FIXES.md).
+October 25 follow-up: infrastructure wake handling and failed-model recovery are
+now deployed. The current image and fresh live results are in
+[deployment verification](DEPLOYMENT_VERIFICATION.md). The October 23 image and
+measurements below are retained as the original scorer-refinement record.
 
 October 23, 2026. The refined image was verified on the isolated `laya-refinement`
 branch, then deployed to the existing `laya-service` endpoint with user approval.
