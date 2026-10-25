@@ -1,0 +1,3 @@
+user_id,home_currency,current_available_balance,minimum_balance_to_keep,financial_priorities,expense_categories_to_protect,expense_categories_user_is_willing_to_reduce,expense_categories_user_is_willing_to_stop,payment_methods_user_will_consider,max_installment_months
+demo_before,INR,40000.00,10000.00,emergency_buffer|essential_bills,rent|groceries|transport|appliance_repair,,,full_payment|wait,
+demo_after,INR,40000.00,10000.00,emergency_buffer|essential_bills,rent|groceries|transport|appliance_repair,,,full_payment|wait,
