@@ -2,7 +2,6 @@
 
 import hashlib
 import json
-import os
 import re
 import time
 import urllib.error
@@ -12,7 +11,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
 from pydantic import ValidationError
 
 from orcha.assistant.contracts import (
@@ -21,6 +19,7 @@ from orcha.assistant.contracts import (
     InterpretationContext,
     ModelUsage,
 )
+from orcha.environment import settings
 
 PROMPT_VERSION = "orcha-text-evidence-v1"
 INSTRUCTIONS = """You extract financial facts. Return one JSON object, no prose.
@@ -65,13 +64,13 @@ class GemmaConfig:
     @classmethod
     def from_environment(cls) -> "GemmaConfig":
         # Only invoked by the explicit assistant workflow; offline commands stay offline.
-        load_dotenv(Path.cwd() / ".env", override=False)
-        cache = os.getenv("GEMMA_CACHE_DIR")
+        values = settings()
+        cache = values.get("GEMMA_CACHE_DIR")
         return cls(
-            api_key=os.getenv("GEMMA_API_KEY", ""),
-            model=os.getenv("GEMMA_MODEL", "gemma-4-26b-a4b-it"),
-            timeout_seconds=float(os.getenv("GEMMA_TIMEOUT_SECONDS", "45")),
-            max_output_tokens=int(os.getenv("GEMMA_MAX_OUTPUT_TOKENS", "4096")),
+            api_key=values.get("GEMMA_API_KEY", ""),
+            model=values.get("GEMMA_MODEL", "gemma-4-26b-a4b-it"),
+            timeout_seconds=float(values.get("GEMMA_TIMEOUT_SECONDS", "45")),
+            max_output_tokens=int(values.get("GEMMA_MAX_OUTPUT_TOKENS", "4096")),
             cache_dir=Path(cache) if cache else None,
         )
 

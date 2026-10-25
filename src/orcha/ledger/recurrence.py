@@ -20,6 +20,7 @@ from orcha.models import (
     FlexibilityType,
     NormalizedFinancialEvent,
 )
+from orcha.money import ExchangeRateNotFoundError, ExchangeRateResolver, quantize_money
 
 _RECURRING_EVENT_TYPES = {
     EventType.EXPENSE,
@@ -242,6 +243,8 @@ def _apply_messages(
         baseline_amount = _stable_historical_amount(source_events)
 
     for message in sorted(messages, key=_message_sort_key):
+        if message.related_event_id and message.related_event_id not in pattern.source_event_ids:
+            continue
         if pattern.category == "rent" and message.evidence_type == EvidenceType.RENT_INCREASE:
             effective = _message_date(message, _add_month(anchor))
             multiplier = _rent_multiplier(message)
@@ -490,6 +493,7 @@ def expand_events(
     end_date: date,
     patterns: list[RecurrencePattern],
     existing_events: list[NormalizedFinancialEvent],
+    fx_resolver: ExchangeRateResolver | None = None,
 ) -> list[ResolvedFinancialEvent]:
     """Project supported recurring occurrences into ``[start_date, end_date]``."""
     projected: list[ResolvedFinancialEvent] = []
@@ -528,6 +532,14 @@ def expand_events(
                 continue
 
             amount = _amount_for_occurrence(pattern, previous_occurrence, occurrence)
+            if pattern.home_currency and pattern.home_currency != home_currency:
+                if fx_resolver is None:
+                    raise ExchangeRateNotFoundError(
+                        "Foreign recurring income needs a dated FX rate"
+                    )
+                amount = quantize_money(
+                    fx_resolver.convert(amount, pattern.home_currency, home_currency, occurrence)
+                )
             behavior = classify_for_forecast(
                 status=EventStatus.SCHEDULED,
                 direction=pattern.direction,

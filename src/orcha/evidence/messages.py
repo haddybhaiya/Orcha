@@ -175,13 +175,25 @@ class MessageEvidenceExtractor:
         additional_amount: Decimal | None = None
 
         # Multilingual matching rules (English and Indonesian)
-        if re.search(r"rent.*(?:increase|by 12%)|sewa.*naik", safe_text, re.I):
+        uncertain = re.search(
+            r"\b(?:not\s+(?:yet\s+)?(?:confirmed|approved|guaranteed|due)|"
+            r"unconfirmed|unapproved|might|maybe|perhaps|tentative|"
+            r"belum\s+(?:dikonfirmasi|disetujui)|tidak\s+dikonfirmasi)\b",
+            safe_text,
+            re.I,
+        )
+        if uncertain:
+            # Uncertain evidence cannot introduce or increase spendable income.
+            notes = "Unconfirmed financial update requires reconciliation"
+        elif re.search(r"rent.*(?:increase|by 12%)|sewa.*naik", safe_text, re.I):
             evidence_type = EvidenceType.RENT_INCREASE
             notes = "Rent increase reported; amount not specified"
             pct_m = re.search(r"(\d+(?:\.\d+)?)\s*%", safe_text)
             if pct_m:
                 notes = f"Rent increased by {pct_m.group(1)}%"
-        elif re.search(r"first salary|gaji pertama", safe_text, re.I):
+        elif re.search(r"first salary|gaji pertama", safe_text, re.I) and re.search(
+            r"\b(?:confirmed|approved|dikonfirmasi|disetujui)\b", safe_text, re.I
+        ):
             evidence_type = EvidenceType.FIRST_SALARY_CONFIRMED
             status = "confirmed"
         elif re.search(

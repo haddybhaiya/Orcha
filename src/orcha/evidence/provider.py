@@ -40,9 +40,7 @@ class LocalEvidenceProvider:
 
     def extract_image(self, image_path: Path, event_id: str) -> ImageEvidence | None:
         evidence = self.images.get_by_event_id(event_id)
-        if evidence is None or not image_path.is_file():
-            return None
-        if image_path.stem != evidence.image_id:
+        if evidence is None or not self.images.matches_source(evidence, image_path):
             return None
         return evidence
 

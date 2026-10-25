@@ -51,10 +51,9 @@ def classify_for_forecast(
         return ForecastBehavior.FUTURE_PENDING_DEBIT
 
     if status == EventStatus.SCHEDULED:
-        if settlement_date < request_date:
-            return ForecastBehavior.HISTORICAL_ALREADY_IN_BALANCE
+        # An unpaid scheduled obligation remains reserved even after its due date.
         return ForecastBehavior.FUTURE_CONFIRMED_DEBIT
 
-    if settlement_date < request_date:
+    if settlement_date <= request_date:
         return ForecastBehavior.HISTORICAL_ALREADY_IN_BALANCE
     return ForecastBehavior.FUTURE_CONFIRMED_DEBIT

@@ -1,5 +1,6 @@
 """Image evidence extraction and indexing."""
 
+import hashlib
 import json
 from datetime import date
 from decimal import Decimal
@@ -50,6 +51,7 @@ class ImageEvidenceExtractor:
                 document_type=r.get("document_type", "receipt"),
                 description=r.get("description", ""),
                 confidence=float(r.get("confidence", 1.0)),
+                source_sha256=r.get("source_sha256"),
             )
             self._by_image_id[evidence.image_id] = evidence
             self._by_event_id[evidence.related_event_id] = evidence
@@ -63,6 +65,22 @@ class ImageEvidenceExtractor:
 
     def get_by_event_id(self, event_id: str) -> ImageEvidence | None:
         return self._by_event_id.get(event_id)
+
+    @staticmethod
+    def matches_source(evidence: ImageEvidence, path: Path) -> bool:
+        """Cached facts are valid only for the exact reviewed image bytes."""
+        if (
+            path.stem != evidence.image_id
+            or evidence.source_sha256 is None
+            or not evidence.amount.is_finite()
+            or evidence.amount < 0
+        ):
+            return False
+        try:
+            with path.open("rb") as source:
+                return hashlib.file_digest(source, "sha256").hexdigest() == evidence.source_sha256
+        except OSError:
+            return False
 
     def all_records(self) -> list[ImageEvidence]:
         return list(self._by_image_id.values())
