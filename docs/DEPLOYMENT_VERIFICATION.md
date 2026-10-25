@@ -1,5 +1,8 @@
 # Production deployment verification
 
+This record covers the Laya rollout. The public web demo was deployed afterward;
+see [PUBLIC_DEMO.md](PUBLIC_DEMO.md) for that separate service and processing model.
+
 October 25, 2026. The user authorized deployment, live checks, and a commit/push
 with CI verification. Demo recording and submission writing remain deferred.
 

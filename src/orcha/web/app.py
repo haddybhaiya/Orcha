@@ -1,4 +1,4 @@
-"""Loopback-only HTTP boundary. Financial content and API secrets stay server-side."""
+"""Local workspace and bounded public demo. API secrets always stay server-side."""
 
 import hashlib
 import hmac
@@ -8,8 +8,9 @@ from collections.abc import Awaitable, Callable
 from datetime import date
 from pathlib import Path
 from typing import Any, TypeVar
+from urllib.parse import urlsplit
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -21,6 +22,7 @@ from orcha.assistant.contracts import AssistantInput
 from orcha.assistant.controller import run_assistant
 from orcha.assistant.routing import router_from_environment
 from orcha.evidence.gemma import PROMPT_VERSION, GemmaConfig, GoogleGemmaProvider
+from orcha.web.demo_jobs import DemoJobs
 from orcha.web.workspace import DEMO_DIR, ImportBundle, SessionProvider, Workspace, demo_archive
 
 STATIC = Path(__file__).with_name("static")
@@ -44,14 +46,31 @@ async def read_payload(request: Request, contract: type[Model], limit: int) -> M
         ) from None
 
 
-def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
+def create_app(dataset: Path = DEMO_DIR, *, public_origin: str | None = None) -> FastAPI:
+    public_demo = public_origin is not None
+    allowed_hosts = ["127.0.0.1", "localhost", "testserver"]
+    if public_origin is not None:
+        parsed = urlsplit(public_origin)
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.path
+            or parsed.query
+            or parsed.fragment
+            or parsed.port not in (None, 443)
+        ):
+            raise ValueError("Configure an exact HTTPS origin for the public demo")
+        if dataset.resolve() != DEMO_DIR.resolve():
+            raise ValueError("Public demos may only use the packaged synthetic dataset")
+        allowed_hosts.append(parsed.hostname)
     workspace = Workspace(dataset)
+    jobs = DemoJobs()
     token = secrets.token_urlsafe(32)
     app = FastAPI(title="Orcha", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.workspace = workspace
-    app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"]
-    )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
     def configure_provider() -> None:
         try:
@@ -77,6 +96,7 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
         configure_provider()
         data = workspace.view(user_id, as_of)
         data["csrf_token"] = token
+        data["public_demo"] = public_demo
         data["providers"] = {
             "gemma_configured": workspace.provider is not None,
             "laya_configured": router_from_environment() is not None,
@@ -88,9 +108,11 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         origin = request.headers.get("origin")
-        expected_origin = str(request.base_url).rstrip("/")
+        expected_origin = public_origin or str(request.base_url).rstrip("/")
         if origin and origin != expected_origin:
-            return JSONResponse({"detail": "Open Orcha from its local address."}, status_code=403)
+            return JSONResponse(
+                {"detail": "Open Orcha from its configured address."}, status_code=403
+            )
         if request.method not in {"GET", "HEAD"}:
             supplied = request.headers.get("x-orcha-token", "")
             if not hmac.compare_digest(supplied.encode(), token.encode()):
@@ -134,12 +156,21 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
     def index() -> FileResponse:
         return FileResponse(STATIC / "index.html", media_type="text/html")
 
+    @app.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "ready"}
+
     @app.get("/api/workspace")
     def get_workspace(user_id: str | None = None, as_of: date | None = None) -> Any:
         return locked(lambda: view(user_id, as_of))
 
     @app.post("/api/import")
     async def import_data(request: Request) -> Any:
+        if public_demo:
+            raise HTTPException(
+                403,
+                "CSV imports are available in the local app. This demo uses fictional finances.",
+            )
         bundle = await read_payload(request, ImportBundle, 8_000_000)
 
         def perform() -> dict[str, Any]:
@@ -155,6 +186,9 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
 
     @app.post("/api/reset")
     def reset() -> Any:
+        if public_demo:
+            raise HTTPException(403, "The public demo's fictional workspace cannot be replaced.")
+
         def perform() -> dict[str, Any]:
             workspace.reset()
             return view()
@@ -170,13 +204,18 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
         )
 
     @app.post("/api/assist")
-    async def assist(request: Request) -> Any:
+    async def assist(request: Request, background: BackgroundTasks) -> Any:
         payload = await read_payload(request, AssistantInput, 70_000)
 
         def perform() -> dict[str, Any]:
             configure_provider()
             if workspace.provider is None:
-                raise HTTPException(503, "Add GEMMA_API_KEY to your local .env, then try again.")
+                message = (
+                    "Demo interpretation is temporarily unavailable. Try again later."
+                    if public_demo
+                    else "Add GEMMA_API_KEY to your local .env, then try again."
+                )
+                raise HTTPException(503, message)
             result = run_assistant(
                 payload,
                 workspace.repository,
@@ -188,7 +227,27 @@ def create_app(dataset: Path = DEMO_DIR) -> FastAPI:
             response["forecast_label"] = "With your updates · before this purchase"
             return response
 
+        if public_demo:
+            identifier = jobs.submit()
+
+            def run_job() -> None:
+                try:
+                    value = {"status": "done", "result": locked(perform)}
+                except HTTPException as error:
+                    value = {"status": "failed", "detail": str(error.detail)}
+                except Exception:
+                    value = {"status": "failed", "detail": "The demo could not finish. Try again."}
+                jobs.finish(identifier, value)
+
+            background.add_task(run_job)
+            return JSONResponse({"status": "pending", "job_id": identifier}, status_code=202)
         return await run_in_threadpool(locked, perform)
+
+    @app.get("/api/jobs/{identifier}")
+    def get_job(identifier: str) -> Any:
+        if not public_demo:
+            raise HTTPException(404, "Not found")
+        return jobs.get(identifier)
 
     app.mount("/static", StaticFiles(directory=STATIC, check_dir=False), name="static")
     return app

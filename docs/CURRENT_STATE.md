@@ -4,6 +4,10 @@ Updated October 25, 2026. The active brief is [plan.md](../plan.md).
 
 ## Working
 
+- [Public no-login demo](PUBLIC_DEMO.md) on InstaCloud, with fictional profiles,
+  text questions, hosted Python calculations, and expiring background results.
+  Local CSV imports remain available. The expanded suite passes 229 tests.
+
 - Review fixes deployed and live-verified, including Laya recovery. All three
   production Gemma workflows pass, and the offline suite has 217 passing tests.
   See [DEPLOYMENT_VERIFICATION.md](DEPLOYMENT_VERIFICATION.md). Demo recording and

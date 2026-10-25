@@ -11,6 +11,15 @@ workspace now supports CSV imports, text updates, and verified purchase plans.
 The [review corrections](docs/REVIEW_FIXES.md) describe financial-validation,
 packaging, test-isolation and service-recovery fixes and their limits.
 
+## Try the public demo
+
+Open [Orcha on InstaCloud](https://prod-web-demo-web-6a2d0d-00h16he17ck.compute.instacloud-edge.com).
+No login is required. Try a sample question, then select **Find a steady way forward**.
+Use fictional data: the hosted demo uses synthetic finances, disables CSV imports,
+and has no saved account history. Selected text goes to Google; calculations run
+on the hosted Python server. Run locally below to import your own CSVs.
+See [public demo operation and limits](docs/PUBLIC_DEMO.md).
+
 ## Open the web workspace
 
 From this repository root:
