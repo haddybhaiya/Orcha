@@ -8,6 +8,9 @@ interpret fresh purchase questions and text bill updates through `--assist`.
 Laya runs on InstaCloud with guarded routing and a local fallback. A local web
 workspace now supports CSV imports, text updates, and verified purchase plans.
 
+The [review corrections](docs/REVIEW_FIXES.md) describe financial-validation,
+packaging, test-isolation and service-recovery fixes and their limits.
+
 ## Open the web workspace
 
 From this repository root:

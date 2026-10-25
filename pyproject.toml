@@ -36,6 +36,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "orcha.web" = ["static/*", "static/**/*"]
+"orcha.demo" = ["*.json", "dataset/*.csv"]
 
 [tool.ruff]
 line-length = 100
@@ -68,3 +69,4 @@ minversion = "7.0"
 addopts = "-q"
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = ["private_data: optional checks requiring the original private dataset"]
