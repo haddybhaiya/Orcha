@@ -1,0 +1,3 @@
+payment_option_id,request_id,payment_method,payment_amount,number_of_payments,first_payment_date,payment_frequency_days,financing_fee,total_payable_amount
+demo_before_full,demo_before_bill,full_payment,25000.00,1,2026-10-21,,0.00,25000.00
+demo_after_full,demo_after_bill,full_payment,25000.00,1,2026-10-21,,0.00,25000.00
