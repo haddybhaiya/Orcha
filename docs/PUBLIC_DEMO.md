@@ -17,9 +17,11 @@ customer account system or persistent user memory. Auth0 and memory-related
 integrations are optional partner categories on the
 [challenge page](https://dev.to/challenges/hacktoberfest-week3-2026-10-19).
 
-The user requested the public demo deployment; demo recording and submission
-writing remain deferred. This deployment does not publish a challenge submission
-or assert eligibility for work completed before the challenge window.
+The user requested the public demo deployment. The official template submission
+is now prepared as an unpublished DEV draft; see [submission handoff](SUBMISSION_CHECKLIST.md).
+A video is optional because this deployed demo fulfills the demo-link requirement.
+Source access and final publication remain pending. This deployment does not
+assert eligibility for work completed before the challenge window.
 
 ## Hosting and privacy
 
